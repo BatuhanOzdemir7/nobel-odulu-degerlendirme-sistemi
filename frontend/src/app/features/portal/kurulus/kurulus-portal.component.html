@@ -1,0 +1,86 @@
+<div class="page-heading"><h1>Kuruluş portalı</h1></div>
+@if (loading()) { <p role="status">Portal yükleniyor…</p> }
+@if (error()) { <p class="notice notice-error" role="alert">{{ error() }}</p> }
+@if (success()) { <p class="notice" role="status">{{ success() }}</p> }
+@if (account(); as credentials) {
+  <section class="panel account" aria-label="Geçici giriş bilgileri">
+    <h2>Adayın giriş bilgileri</h2>
+    <p class="hint">Giriş bilgileri yalnızca bu kartta gösterilir.</p>
+    <dl><dt>Kullanıcı adı</dt><dd><code>{{ credentials.kullaniciAdi }}</code></dd>
+      <dt>Geçici şifre</dt><dd><code>{{ credentials.geciciSifre }}</code></dd></dl>
+    <div class="actions">
+      <button type="button" class="primary" (click)="copyAccount(credentials)">Kopyala</button>
+      <button type="button" class="secondary" (click)="dismissAccount()">Kartı kapat</button>
+    </div>
+    @if (copyMessage()) { <p role="status">{{ copyMessage() }}</p> }
+  </section>
+}
+@if (!loading()) {
+  <section class="panel">
+    <h2>Aday göster</h2>
+    <form class="stack" [formGroup]="form" (ngSubmit)="submit()">
+      <fieldset class="stack" [disabled]="saving() || !!account()">
+        <legend>Aday seçimi</legend>
+        <div class="actions">
+          <button type="button" class="secondary" [attr.aria-pressed]="mode() === 'existing'" (click)="changeMode('existing')">Mevcut aday</button>
+          <button type="button" class="secondary" [attr.aria-pressed]="mode() === 'new'" (click)="changeMode('new')">Listede yok, yeni aday</button>
+        </div>
+        @if (mode() === 'existing') {
+          <label>Aday ara<input [formControl]="searchQuery" placeholder="Ad, soyad veya çalışma alanı" autocomplete="off" /></label>
+          @if (selected(); as candidate) {
+            <p class="notice">Seçili aday: {{ candidate.gorunenAd }}</p>
+          } @else if (searching()) {
+            <p role="status">Adaylar aranıyor…</p>
+          } @else if (searchError()) {
+            <p class="notice notice-error" role="alert">{{ searchError() }}</p>
+          } @else if (searched()) {
+            <ul class="search-results">
+              @for (candidate of results(); track candidate.adayId) {
+                <li><button type="button" class="secondary" (click)="select(candidate)">
+                  {{ candidate.gorunenAd }} · {{ candidate.calismaAlani }}
+                  @if (candidate.hesapVar) { <small>Hesabı var</small> }
+                </button></li>
+              } @empty { <li>Aday bulunamadı.</li> }
+            </ul>
+          } @else {
+            <p class="hint">Aramak için en az iki karakter yazın.</p>
+          }
+        } @else {
+          <div class="form-grid" formGroupName="yeniAday">
+            <label>Ad<input formControlName="ad" /></label><label>Soyad<input formControlName="soyad" /></label>
+            <label>Cinsiyet<input formControlName="cinsiyet" /></label>
+            <label>Doğum tarihi<input type="date" formControlName="dogumTarihi" /></label>
+            <label>Uyruk<input formControlName="uyruk" /></label>
+            <label>Çalışma alanı<input formControlName="calismaAlani" /></label>
+          </div>
+        }
+        <label>Ödül
+          <select formControlName="odulId">
+            <option [ngValue]="null">Ödül seçin</option>
+            @for (group of groups(); track group.id) {
+              <optgroup [label]="group.label">
+                @for (award of group.awards; track award.odulId) {
+                  <option [ngValue]="award.odulId">{{ award.odulAdi }}</option>
+                }
+              </optgroup>
+            }
+          </select>
+        </label>
+        <button type="submit" class="primary" [disabled]="form.invalid || saving() || !!account()">
+          {{ saving() ? 'Gönderiliyor…' : 'Adaylığı gönder' }}
+        </button>
+      </fieldset>
+    </form>
+  </section>
+  <section class="panel">
+    <h2>Yaptığım Adaylıklar</h2>
+    <div class="table-wrap"><table><thead><tr>
+      <th>Aday</th><th>Ödül</th><th>Kategori</th><th>Tarih ve saat</th><th>Komite sonucu</th>
+    </tr></thead><tbody>
+      @for (row of nominations(); track row.adayGostermeId) {
+        <tr><td>{{ row.adayAdi }}</td><td>{{ row.odulAdi }}</td><td>{{ row.kategoriAdi }}</td>
+          <td>{{ row.tarih }} {{ row.saat?.slice(0, 8) }}</td><td>{{ row.sonuc ?? 'Beklemede' }}</td></tr>
+      } @empty { <tr><td colspan="5" class="empty">Henüz adaylık kaydı yok.</td></tr> }
+    </tbody></table></div>
+  </section>
+}

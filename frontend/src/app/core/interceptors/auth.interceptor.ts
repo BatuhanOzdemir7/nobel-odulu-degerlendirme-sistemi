@@ -2,7 +2,7 @@ import { HttpErrorResponse, HttpInterceptorFn } from '@angular/common/http';
 import { inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { catchError, throwError } from 'rxjs';
-import { API_BASE_URL } from '../services/api-url';
+import { API_BASE_URL, SHOW_FORBIDDEN_IN_VIEW } from '../services/api-url';
 import { AuthService, LOGIN_URL, RESTORING_SESSION } from '../services/auth.service';
 
 const api = new URL(API_BASE_URL);
@@ -33,7 +33,8 @@ export const authInterceptor: HttpInterceptorFn = (request, next) => {
             const returnUrl = router.url;
             void router.navigate(['/login'], { queryParams: { reason: 'expired', returnUrl } });
           }
-        } else if (error.status === 403 && !request.context.get(RESTORING_SESSION)) {
+        } else if (error.status === 403 && !request.context.get(RESTORING_SESSION) &&
+                   !request.context.get(SHOW_FORBIDDEN_IN_VIEW)) {
           void router.navigate(['/forbidden']);
         }
       }

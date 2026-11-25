@@ -1,0 +1,38 @@
+<div class="page-heading"><h1>Uzman portalı</h1></div>
+@if (loading()) {
+  <p role="status">Komiteler yükleniyor…</p>
+} @else if (portalError()) {
+  <p class="notice notice-error" role="alert">{{ portalError() }}</p>
+} @else if (committees().length === 0) {
+  <p class="empty">Üyesi olduğunuz bir komite yok.</p>
+} @else {
+  <section class="panel stack committee">
+    <label>Komite
+      <select [formControl]="committee">
+        @for (item of committees(); track item.komiteId) {
+          <option [ngValue]="item.komiteId">{{ item.komiteAdi }} · {{ item.kategoriAdi }}</option>
+        }
+      </select>
+    </label>
+    @if (selected(); as item) {
+      <p class="hint">{{ item.bekleyenAdaySayisi }} bekleyen aday</p>
+      <div class="members" aria-label="Komite üyeleri">
+        @for (member of item.uyeler; track member.uzmanId) { <span class="secondary">{{ member.uzmanAdi }}</span> }
+      </div>
+    }
+  </section>
+  @if (actionError()) { <p class="notice notice-error" role="alert">{{ actionError() }}</p> }
+  @if (success()) { <p class="notice" role="status">{{ success() }}</p> }
+  @if (listLoading()) {
+    <p role="status">Adaylar yükleniyor…</p>
+  } @else if (listError()) {
+    <p class="notice notice-error" role="alert">{{ listError() }}</p>
+  } @else {
+    <div class="two-column candidates">
+      @for (candidate of candidates(); track candidate.adayId) {
+        <nobel-vote-panel [candidate]="candidate" [criteria]="criteria()" [busy]="busy()"
+          (vote)="vote($event)" (finish)="finalizeDecision($event)" />
+      } @empty { <p class="empty">Bu komitenin kategorisinde adaylık yok.</p> }
+    </div>
+  }
+}

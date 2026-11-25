@@ -1,0 +1,10 @@
+fieldset { border: 0; margin: 0; padding: 0; min-width: 0; }
+legend { margin-bottom: 10px; font-weight: 600; }
+.actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.actions [aria-pressed="true"] { outline: 2px solid #398577; }
+.search-results { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.search-results button { text-align: left; width: 100%; }
+small { margin-inline-start: 6px; }
+.account { border-color: #80aaa2; margin-bottom: 20px; }
+dl { display: grid; grid-template-columns: max-content 1fr; gap: 8px 16px; }
+dd { margin: 0; }

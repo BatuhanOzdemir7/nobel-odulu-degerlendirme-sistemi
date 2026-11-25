@@ -1,0 +1,22 @@
+<div class="page-heading"><h1>Ayarlar</h1></div>
+<section class="panel">
+  <h2>Aday portalı gizlilik modu</h2>
+  @if (loading()) {
+    <p role="status">Gizlilik modu yükleniyor…</p>
+  } @else if (saved()) {
+    <form class="stack" [formGroup]="form" (ngSubmit)="save()">
+      <label>Gizlilik modu
+        <select formControlName="mod">
+          <option value="SEFFAF">Şeffaf</option>
+          <option value="GIZLI">Gizli</option>
+        </select>
+      </label>
+      <p class="hint">Gizli modda adaylar ödülü ve adaylık aşamasını görür.</p>
+      <button type="submit" class="primary" [disabled]="saving() || mode.value === saved()">
+        {{ saving() ? 'Kaydediliyor…' : 'Kaydet' }}
+      </button>
+    </form>
+  }
+  @if (error()) { <p class="notice notice-error" role="alert">{{ error() }}</p> }
+  @if (success()) { <p class="notice" role="status">{{ success() }}</p> }
+</section>

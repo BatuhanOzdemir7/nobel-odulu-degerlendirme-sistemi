@@ -1,0 +1,44 @@
+<div class="page-heading"><h1>Aday portalı</h1></div>
+@if (loading()) {
+  <p role="status">Adaylıklar yükleniyor…</p>
+} @else if (error()) {
+  <p class="notice notice-error" role="alert">{{ error() }}</p>
+} @else if (summary(); as view) {
+  <div class="page-heading">
+    <p>{{ view.aday.ad }} {{ view.aday.soyad }} · {{ view.aday.calismaAlani }}</p>
+    <span class="secondary">{{ view.gizlilikModu === 'GIZLI' ? 'Gizli mod' : 'Şeffaf mod' }}</span>
+  </div>
+  <section class="panel">
+    <h2>Aday Gösterildiğim Ödüller</h2>
+    <div class="table-wrap"><table><thead><tr>
+      <th>Ödül</th><th>Kuruluş</th><th>Tarih ve saat</th><th>Aşama</th><th>Sonuç</th>
+    </tr></thead><tbody>
+      @for (row of view.adayliklar; track row.adayGostermeId) {
+        <tr>
+          <td>{{ row.odulAdi }} @if (row.kategoriAdi) { <small>{{ row.kategoriAdi }}</small> }</td>
+          <td>{{ row.kurulusAdi }}</td>
+          @if (view.gizlilikModu === 'GIZLI') {
+            <td><span class="secondary">Gizli</span></td><td>{{ stages[row.asama] }}</td>
+            <td><span class="secondary">Gizli</span></td>
+          } @else {
+            <td>{{ row.tarih }} {{ row.saat?.slice(0, 8) }}</td><td>{{ stages[row.asama] }}</td>
+            <td>{{ row.sonuc ?? 'Beklemede' }}</td>
+          }
+        </tr>
+      } @empty { <tr><td colspan="5" class="empty">Henüz bir adaylığınız yok.</td></tr> }
+    </tbody></table></div>
+  </section>
+  <section class="panel">
+    <h2>Komite Değerlendirme Sonuçlarım</h2>
+    @if (view.gizlilikModu === 'GIZLI') {
+      <p><span class="secondary">Gizli</span></p>
+    } @else {
+      <div class="table-wrap"><table><thead><tr><th>Komite</th><th>Tarih</th><th>Ölçüt</th><th>Sonuç</th></tr></thead>
+      <tbody>
+        @for (decision of view.degerlendirmeler; track decision.degerlendirmeId) {
+          <tr><td>{{ decision.komiteAdi }}</td><td>{{ decision.tarih }}</td><td>{{ decision.olcut }}</td><td>{{ decision.sonuc }}</td></tr>
+        } @empty { <tr><td colspan="4" class="empty">Henüz bir değerlendirme sonucu yok.</td></tr> }
+      </tbody></table></div>
+    }
+  </section>
+}

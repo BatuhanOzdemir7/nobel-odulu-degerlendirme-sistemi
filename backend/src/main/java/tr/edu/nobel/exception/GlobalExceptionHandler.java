@@ -11,6 +11,8 @@ import org.springframework.transaction.TransactionSystemException;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import tr.edu.nobel.dto.response.ApiError;
@@ -49,6 +51,11 @@ public class GlobalExceptionHandler {
         return error(HttpStatus.CONFLICT, ex.getMessage(), request, Map.of());
     }
 
+    @ExceptionHandler(CategoryMismatchException.class)
+    public ResponseEntity<ApiError> categoryMismatch(CategoryMismatchException ex, HttpServletRequest request) {
+        return error(HttpStatus.UNPROCESSABLE_ENTITY, ex.getMessage(), request, Map.of());
+    }
+
     @ExceptionHandler({DataIntegrityViolationException.class, ConstraintViolationException.class, TransactionSystemException.class})
     public ResponseEntity<ApiError> integrity(RuntimeException ex, HttpServletRequest request) {
         return error(HttpStatus.CONFLICT, databaseMessage(ex), request, Map.of());
@@ -66,6 +73,11 @@ public class GlobalExceptionHandler {
     @ExceptionHandler({HttpMessageNotReadableException.class, IllegalArgumentException.class})
     public ResponseEntity<ApiError> badRequest(Exception ex, HttpServletRequest request) {
         return error(HttpStatus.BAD_REQUEST, ex.getMessage(), request, Map.of());
+    }
+
+    @ExceptionHandler({MissingServletRequestParameterException.class, MethodArgumentTypeMismatchException.class})
+    public ResponseEntity<ApiError> invalidParameter(Exception ex, HttpServletRequest request) {
+        return error(HttpStatus.BAD_REQUEST, "İstek parametresi eksik veya geçersiz.", request, Map.of());
     }
 
     private String databaseMessage(Throwable throwable) {

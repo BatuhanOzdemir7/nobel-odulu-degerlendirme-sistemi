@@ -1,0 +1,15 @@
+<header class="topbar">
+  <a class="brand" [routerLink]="home()">Nobel <span>Değerlendirme Sistemi</span></a>
+  @if (auth.user(); as user) {
+    <div class="session">
+      @switch (user.rol) {
+        @case ('KURULUS') { <span class="role">Kuruluş</span> }
+        @case ('ADAY') { <span class="role">Aday</span> }
+        @case ('UZMAN') { <span class="role">Uzman</span> }
+      }
+      <span>{{ user.displayName }}</span>
+      <button type="button" class="secondary" (click)="logout()">Çıkış</button>
+    </div>
+  }
+</header>
+<main><router-outlet /></main>
