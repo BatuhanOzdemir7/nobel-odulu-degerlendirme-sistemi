@@ -33,6 +33,9 @@
             "development": {"buildTarget": "nobel-degerlendirme:build:development"}
           },
           "defaultConfiguration": "development"
+        },
+        "test": {
+          "builder": "@angular/build:unit-test"
         }
       }
     }
