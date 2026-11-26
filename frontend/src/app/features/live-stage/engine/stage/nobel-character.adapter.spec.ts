@@ -1,13 +1,16 @@
-import { ApplicationRef, EnvironmentInjector } from '@angular/core';
+import { ApplicationRef, EnvironmentInjector, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { describe, expect, it, vi } from 'vitest';
+import { ActivityStreamService } from '../../../../core/events/activity-stream.service';
 import type { StageCharacterCommand } from '../../stage/stage.contract';
 import { NobelCharacterAdapter } from './nobel-character.adapter';
 import { NobelStageComponent } from './nobel-stage.component';
 
 describe('NobelCharacterAdapter', () => {
   it('mounts one host, forwards scene commands, and detaches and destroys the view', () => {
-    TestBed.configureTestingModule({});
+    TestBed.configureTestingModule({
+      providers: [{ provide: ActivityStreamService, useValue: { recent: signal([]) } }],
+    });
     const application = TestBed.inject(ApplicationRef);
     const initialViews = application.viewCount;
     const adapter = new NobelCharacterAdapter(TestBed.inject(EnvironmentInjector));

@@ -1,9 +1,9 @@
 import { DOCUMENT } from '@angular/common';
 import {
-  afterNextRender, ChangeDetectionStrategy, Component, computed, ElementRef, inject, isDevMode, OnDestroy, signal,
-  viewChild,
+  afterNextRender, ChangeDetectionStrategy, Component, computed, effect, ElementRef, inject, isDevMode, OnDestroy,
+  signal, untracked, viewChild,
 } from '@angular/core';
-import { ActivityStreamService } from '../../../../core/events/activity-stream.service';
+import { ActivityStreamService, stageCommandFor } from '../../../../core/events/activity-stream.service';
 import { createDemoEvent } from '../../../../core/events/demo-fixtures';
 import { CharacterRigComponent, type Vec2 } from '../character-rig';
 import type { StageCharacterCommand } from '../../stage/stage.contract';
@@ -26,7 +26,18 @@ export class NobelStageComponent implements StageHost, OnDestroy {
   private readonly reduced = signal(this.motionQuery?.matches ?? false);
   readonly demoFixtures = isDevMode() && new URLSearchParams(this.view?.location.search).get('demo') === '1'
     ? stageDemoFixtures() : [];
-  private readonly demoStream = this.demoFixtures.length ? inject(ActivityStreamService) : null;
+  private readonly stream = inject(ActivityStreamService);
+  protected readonly latestCommand = computed(() => {
+    const recent = this.stream.recent();
+    for (let index = recent.length - 1; index >= 0; index--) {
+      const command = stageCommandFor(recent[index]);
+      if (command) return command;
+    }
+    return undefined;
+  });
+  private hasPlayed = false;
+  private initialReplayId?: string;
+
   readonly director = new NobelStageDirector(this);
   private readonly refreshGaze = () => this.director.refreshGaze();
   private readonly resizeObserver = typeof ResizeObserver === 'function' ? new ResizeObserver(this.refreshGaze) : null;
@@ -51,6 +62,12 @@ export class NobelStageComponent implements StageHost, OnDestroy {
   });
 
   constructor() {
+    effect(() => {
+      if (this.hasPlayed || this.demoFixtures.length) return;
+      const command = this.latestCommand();
+      if (command) untracked(() => this.playHistory(command));
+    });
+
     afterNextRender(() => {
       const stage = this.stageEl()?.nativeElement;
       if (stage) this.resizeObserver?.observe(stage);
@@ -60,10 +77,24 @@ export class NobelStageComponent implements StageHost, OnDestroy {
     });
   }
 
-  play(command: StageCharacterCommand): void { this.director.play(command); }
+  play(command: StageCharacterCommand): void {
+    this.hasPlayed = true;
+    if (command.eventId !== this.initialReplayId) this.director.play(command);
+  }
+
+  protected replayLatest(): void {
+    const command = this.latestCommand();
+    if (command && !this.director.playing()) this.playHistory(command);
+  }
+
+  private playHistory(command: StageCharacterCommand): void {
+    if (!this.hasPlayed) this.initialReplayId = command.eventId;
+    this.hasPlayed = true;
+    this.director.play(command);
+  }
 
   protected playDemo(fixture: ReturnType<typeof stageDemoFixtures>[number]): void {
-    this.demoStream?.inject(createDemoEvent(fixture));
+    this.stream.inject(createDemoEvent(fixture));
   }
 
   centerOf(ref: string): Vec2 | null {

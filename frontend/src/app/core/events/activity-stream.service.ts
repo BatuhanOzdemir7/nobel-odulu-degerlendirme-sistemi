@@ -25,6 +25,12 @@ export function activityStatusLabel(status: ActivityStreamStatus): string {
   return statusLabels[status];
 }
 
+export function stageCommandFor(event: ActivityEvent): StageCharacterCommand | undefined {
+  return event.stageCue
+    ? { ...event.stageCue, eventId: event.eventId, severity: event.erHighlight.severity }
+    : undefined;
+}
+
 @Injectable({ providedIn: 'root' })
 export class ActivityStreamService {
   private readonly createSource = inject(ACTIVITY_EVENT_SOURCE_FACTORY);
@@ -51,9 +57,7 @@ export class ActivityStreamService {
   });
 
   readonly stageCommands$ = this.events$.pipe(
-    map((event): StageCharacterCommand | undefined => event.stageCue
-      ? { ...event.stageCue, eventId: event.eventId, severity: event.erHighlight.severity }
-      : undefined),
+    map(stageCommandFor),
     filter((command): command is StageCharacterCommand => command !== undefined),
   );
 

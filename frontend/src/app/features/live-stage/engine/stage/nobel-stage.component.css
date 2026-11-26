@@ -109,12 +109,14 @@
 .flash { position: absolute; inset: 0; z-index: 96; opacity: 0; background: radial-gradient(circle, transparent 40%, #ff3b30aa); animation: flash 700ms ease-out both; }
 
 .demo-controls { display: flex; flex-wrap: wrap; gap: .4rem; margin-top: .55rem; }
-.demo-controls button {
+.replay-controls { display: flex; justify-content: flex-end; margin-bottom: .4rem; }
+:is(.demo-controls, .replay-controls) button {
   border: 1px solid #5c8179; border-radius: .4rem; padding: .3rem .55rem;
   color: #e4efeb; background: #1a433e; cursor: pointer; font-size: .78rem;
 }
-.demo-controls button:hover { background: #265950; }
-.demo-controls button:focus-visible { outline: 2px solid #f3d99b; outline-offset: 2px; }
+:is(.demo-controls, .replay-controls) button:enabled:hover { background: #265950; }
+:is(.demo-controls, .replay-controls) button:focus-visible { outline: 2px solid #f3d99b; outline-offset: 2px; }
+.replay-controls button:disabled { opacity: .62; cursor: default; }
 
 /* ── keyframes ── */
 @keyframes actor-in { from { opacity: 0; } }

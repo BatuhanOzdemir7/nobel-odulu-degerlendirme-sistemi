@@ -1,9 +1,14 @@
+@if (latestCommand()) {
+  <div class="replay-controls">
+    <button type="button" [disabled]="director.playing()" (click)="replayLatest()">Son animasyonu oynat</button>
+  </div>
+}
 <div #stage class="stage" [attr.data-backdrop]="director.backdrop()"
      [style.--seat-count]="expertCount()" [style.--stage-gavel-duration]="(900 * director.timeScale()) + 'ms'"
      [style.--stage-envelope-duration]="(1000 * director.timeScale()) + 'ms'" aria-hidden="true">
   <div class="stage__wall"></div>
   <div class="stage__floor"></div>
-  @if (director.backdrop() === 'empty') { <p class="stage__waiting">Olay bekleniyor.</p> }
+  @if (director.backdrop() === 'empty') { <p class="stage__waiting">Animasyonlu olay bekleniyor.</p> }
 
   @if (director.backdrop() === 'nomination') {
     <div class="podium" data-ref="prop:podium">

@@ -24,6 +24,7 @@ export class NobelStageDirector {
   readonly flash = signal(0);
   readonly confetti = signal(0);
   readonly timeScale = signal(1);
+  readonly playing = signal(false);
 
   private readonly queue = new SceneQueue<StageCharacterCommand>((cmd, fast) => this.run(cmd, fast));
   private current: Timeline | null = null;
@@ -43,6 +44,7 @@ export class NobelStageDirector {
   }
 
   private async run(cmd: StageCharacterCommand, fast: boolean): Promise<void> {
+    this.playing.set(true);
     this.timeScale.set(this.host.reducedMotion ? 0.15 : fast ? 0.5 : 1);
     const t = new Timeline(this.timeScale);
     this.current = t;
@@ -54,7 +56,10 @@ export class NobelStageDirector {
         case 'CONSTRAINT_ERROR': await this.constraintError(cmd, t); break;
       }
     } finally {
-      if (this.current === t) this.current = null;
+      if (this.current === t) {
+        this.current = null;
+        this.playing.set(false);
+      }
     }
   }
 
