@@ -1,0 +1,34 @@
+<main class="live-stage">
+  <header class="stage-header">
+    <h1>Nobel Canlı Sahne</h1>
+    <span class="connection" role="status" [attr.data-status]="stream.status()">
+      {{ statusLabel(stream.status()) }}
+    </span>
+  </header>
+  <div class="stage-grid">
+    <section class="surface map-panel" aria-labelledby="er-heading">
+      <h2 id="er-heading">ER Diyagramı</h2>
+      <div class="map-scroll">
+        <app-er-live-map [highlight]="current()?.erHighlight ?? null" />
+      </div>
+    </section>
+    <section class="surface character-panel" aria-labelledby="character-heading">
+      <h2 id="character-heading">Karakter Sahnesi</h2>
+      <app-character-stage />
+    </section>
+  </div>
+  <section class="surface ribbon" aria-labelledby="sql-heading">
+    <h2 id="sql-heading">SQL Akışı</h2>
+    <app-sql-ribbon />
+  </section>
+  @if (demo()) {
+    <section class="surface" aria-labelledby="demo-heading">
+      <h2 id="demo-heading">Demo olaylar</h2>
+      <div class="demo-actions">
+        @for (fixture of fixtures; track fixture.action) {
+          <button type="button" (click)="play(fixture)">{{ fixture.label }}</button>
+        }
+      </div>
+    </section>
+  }
+</main>

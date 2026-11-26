@@ -1,0 +1,51 @@
+:host { display: block; background: #0a1e1c; color: #e3edeb; }
+.live-stage {
+  display: grid;
+  align-content: start;
+  gap: 1rem;
+  width: 100%;
+  min-height: 100dvh;
+  margin: 0;
+  padding: clamp(1rem, 3vw, 3rem);
+}
+.stage-header { display: flex; gap: 1rem; align-items: center; justify-content: space-between; }
+h1 { color: #f3d99b; }
+h2 { color: #e7f0ed; margin: 0 0 .75rem; }
+.stage-grid { display: grid; grid-template-columns: minmax(0, 3fr) minmax(14rem, 1fr); gap: 1rem; }
+.surface { background: #102926; border: 1px solid #2d514a; border-radius: .8rem; padding: 1rem; }
+.map-scroll { overflow-x: auto; }
+.map-scroll app-er-live-map { min-width: 32rem; }
+.character-panel { min-width: 0; }
+.ribbon { background: #081917; }
+.connection {
+  display: inline-flex;
+  align-items: center;
+  gap: .55em;
+  flex-shrink: 0;
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  padding: .35em .7em;
+  color: #b7cdc6;
+  font-size: .8rem;
+}
+.connection::before { content: ''; width: .55em; height: .55em; border-radius: 50%; background: currentColor; }
+.connection[data-status='open'] { color: #a2e1bd; }
+.connection[data-status='connecting'], .connection[data-status='reconnecting'] { color: #f3d99b; }
+.demo-actions { display: flex; flex-wrap: wrap; gap: .5rem; }
+.demo-actions button {
+  padding: .55rem .8rem;
+  background: #1a433e;
+  color: #f1f7f5;
+  border: 1px solid #5c8179;
+  border-radius: .45rem;
+  cursor: pointer;
+}
+.demo-actions button:hover { background: #265950; }
+button:focus-visible { outline: 2px solid #f3d99b; outline-offset: 2px; }
+
+@media (max-width: 900px) {
+  .stage-grid { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 480px) {
+  .stage-header { flex-wrap: wrap; }
+}

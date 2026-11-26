@@ -13,6 +13,10 @@ export const routes: Routes = [
     loadComponent: () => import('./shared/forbidden/forbidden.component').then(m => m.ForbiddenComponent),
   },
   {
+    path: 'live-stage',
+    loadComponent: () => import('./features/live-stage/live-stage.component').then(m => m.LiveStageComponent),
+  },
+  {
     path: 'admin',
     canActivate: [authGuard, roleGuard('ADMIN')],
     loadComponent: () => import('./features/admin/admin-shell/admin-shell.component').then(m => m.AdminShellComponent),

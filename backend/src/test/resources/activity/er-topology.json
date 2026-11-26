@@ -1,0 +1,28 @@
+{
+  "nodes": [
+    "KURULUS",
+    "ADAY",
+    "ODUL",
+    "KATEGORI",
+    "DEGERLENDIRME_KOMITESI",
+    "UZMAN",
+    "aday_gosterir",
+    "kategorisine_aittir",
+    "olusturulur",
+    "degerlendirir",
+    "uyesidir"
+  ],
+  "edges": [
+    "KURULUS-aday_gosterir",
+    "aday_gosterir-ADAY",
+    "aday_gosterir-ODUL",
+    "ODUL-kategorisine_aittir",
+    "kategorisine_aittir-KATEGORI",
+    "KATEGORI-olusturulur",
+    "olusturulur-DEGERLENDIRME_KOMITESI",
+    "DEGERLENDIRME_KOMITESI-degerlendirir",
+    "degerlendirir-ADAY",
+    "UZMAN-uyesidir",
+    "uyesidir-DEGERLENDIRME_KOMITESI"
+  ]
+}
