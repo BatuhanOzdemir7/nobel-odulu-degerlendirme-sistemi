@@ -1,0 +1,661 @@
+/*
+ * character-rig.component.css
+ *
+ * Birim: --u = 1 tasarım pikseli (gerçek px). Kök genişliği ÷ görünüm genişliği; ölçekten bağımsızdır.
+ * Dışarıdan ayarlanabilir: --character-width (varsayılan 100px), --character-shadow,
+ * --ease-mechanical / --ease-signature (tasarım sisteminizin eğrileri; yedekleri var).
+ *
+ * Kanallar (çakışmayı önlemek için):
+ *   translate / rotate / scale  → sürekli değerler (paralaks, ifade, göz açıklığı, sürükleme, basma)
+ *   transform                   → yalnızca @keyframes (nefes, sarsıntı, konuşma, parmak ucu)
+ */
+
+:host {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  max-width: 100%;
+  min-width: 0;
+  pointer-events: none;
+  --character-width: 100px;
+}
+
+.character {
+  position: relative;
+  flex: 0 0 var(--character-width);
+  width: var(--character-width);
+  container-type: inline-size;
+  isolation: isolate;
+  user-select: none;
+  filter: var(--character-shadow, none);
+}
+
+/* Gövdesiz (baş) görünümde sahne kırpılır; kaynak: guardian-head.css */
+.character[data-view='crop'] {
+  overflow: hidden;
+}
+
+.stage {
+  position: absolute;
+  --u: calc(100cqw / var(--view-w, 616));
+  transform-origin: 50% 88%;
+}
+
+img {
+  display: block;
+  object-fit: contain;
+  image-rendering: auto;
+  backface-visibility: hidden;
+  pointer-events: none;
+  -webkit-user-drag: none;
+}
+
+.layer,
+.eye,
+.head {
+  position: absolute;
+}
+
+.layer,
+.eye {
+  z-index: var(--z, auto);
+}
+
+/* ───────────── Baş: eğim + paralaks (kinematics → rAF) ───────────── */
+
+.head {
+  inset: 0;
+  z-index: 400;
+  transform-origin: var(--head-pivot, 50% 37%);
+  translate: calc(var(--head-x, 0) * var(--u)) calc(var(--head-y, 0) * var(--u));
+  rotate: calc(var(--head-tilt, 0) * 1deg);
+}
+
+/* ───────────── Gözler ───────────── */
+
+.eye {
+  --blink: 1;
+  display: block;
+  scale: max(1, var(--eye-open)) calc(var(--eye-open) * var(--blink));
+  transition: scale var(--expr-ms, 120ms) ease-out;
+}
+
+.eye[data-eye='left'] {
+  --eye-open: var(--eye-open-l, 1);
+}
+
+.eye[data-eye='right'] {
+  --eye-open: var(--eye-open-r, 1);
+}
+
+/* Göz kırpma: guardian-head.css → .is-blinking .eye-socket { scaleY(0.08) }, 65 ms */
+.character[data-blinking] .eye {
+  --blink: 0.08;
+  transition-duration: 65ms;
+}
+
+.eye-white {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+/* Göz bebeği: --pupil-x/y birim çemberdedir (-1..1); aralık göz kutusunun %26'sıdır. */
+.eye-pupil {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 34.783%;
+  height: 34.783%;
+  translate: calc(-50% + var(--pupil-x, 0) * var(--pupil-range-x, 74.75%))
+    calc(-50% + var(--pupil-y, 0) * var(--pupil-range-y, 74.75%));
+  opacity: var(--pupil-opacity, 1);
+  transition: opacity var(--expr-ms, 120ms) ease-out;
+}
+
+/* ───────────── Kaşlar: ifade (transform) + paralaks (translate) ───────────── */
+
+[data-layer='left-eyebrow'] {
+  translate: calc(var(--brow-px, 0) * var(--u)) calc(var(--brow-py, 0) * var(--u));
+  transform: translateY(calc(var(--brow-l-y, 0) * var(--u))) rotate(calc(var(--brow-l-rot, 0) * 1deg));
+  transition: transform var(--expr-ms, 120ms) ease-out;
+}
+
+[data-layer='right-eyebrow'] {
+  translate: calc(var(--brow-px, 0) * var(--u)) calc(var(--brow-py, 0) * var(--u));
+  transform: translateY(calc(var(--brow-r-y, 0) * var(--u))) rotate(calc(var(--brow-r-rot, 0) * 1deg));
+  transition: transform var(--expr-ms, 120ms) ease-out;
+}
+
+/* ───────────── Etkileşimli parçalar ───────────── */
+
+.layer[role='button'],
+.layer[data-drag-axis],
+.eye[role='button'] {
+  pointer-events: auto;
+}
+
+.layer[role='button'],
+.eye[role='button'] {
+  cursor: pointer;
+}
+
+.layer[role='button']:focus-visible,
+.eye[role='button']:focus-visible {
+  outline: 2px solid var(--accent, #80f7ff);
+  outline-offset: 0.25rem;
+}
+
+/* Sakal / bıyık sürükleme: bırakınca taşmalı yay (hero.css) */
+.layer[data-drag-axis] {
+  cursor: grab;
+  touch-action: none;
+  translate: calc(var(--drag-x, 0) * var(--u)) calc(var(--drag-y, 0) * var(--u));
+  transition: translate 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.layer[data-dragging] {
+  cursor: grabbing;
+  transition: none;
+}
+
+/* Burna dokunma */
+[data-layer='nose'] {
+  transition: scale 0.15s var(--ease-signature, cubic-bezier(0.2, 0.8, 0.2, 1));
+}
+
+[data-layer='nose'][data-booped] {
+  scale: 0.75;
+}
+
+/* ───────────── Parmaklar ───────────── */
+
+.layer[data-group='finger'] {
+  animation: character-fingertip 2.8s ease-in-out infinite;
+  transition:
+    rotate 0.34s var(--ease-mechanical, cubic-bezier(0.2, 0.8, 0.2, 1)),
+    scale 0.34s var(--ease-mechanical, cubic-bezier(0.2, 0.8, 0.2, 1)),
+    filter 0.2s;
+}
+
+.layer[data-group='finger']:is(:hover, :focus-visible) {
+  z-index: 350;
+  filter: brightness(1.16) saturate(1.1);
+}
+
+.layer[data-group='finger'][data-pressed] {
+  animation: character-strike 260ms var(--ease-mechanical, cubic-bezier(0.2, 0.8, 0.2, 1)) both;
+}
+
+.layer[data-finger-kind='finger'][data-layer$='-left'][data-pressed] {
+  rotate: -16deg;
+  scale: 0.86;
+}
+
+.layer[data-finger-kind='finger'][data-layer$='-right'][data-pressed] {
+  rotate: 16deg;
+  scale: 0.86;
+}
+
+.layer[data-finger-kind='thumb'][data-layer$='-left'][data-pressed] {
+  rotate: 20deg;
+  scale: 0.82;
+}
+
+.layer[data-finger-kind='thumb'][data-layer$='-right'][data-pressed] {
+  rotate: -20deg;
+  scale: 0.82;
+}
+
+/* ───────────── Nefes / uyku / irkilme (sahne) ───────────── */
+
+.character[data-view='full'] .stage {
+  animation: character-breathe 4.5s ease-in-out infinite;
+}
+
+.character[data-view='full'][data-mode='sleeping'] .stage {
+  animation: character-breathe-sleep 6s ease-in-out infinite;
+}
+
+.character[data-expression='startled'] .stage {
+  animation: character-startle 0.45s var(--ease-signature, cubic-bezier(0.2, 0.8, 0.2, 1)) both;
+}
+
+/* ───────────── Hapşırma ───────────── */
+
+.character[data-expression='sneezing'] [data-layer='face'] {
+  animation: character-sneeze-face 0.35s ease-in-out;
+}
+
+.character[data-expression='sneezing'] [data-layer='hair'] {
+  transform-origin: 50% 100%;
+  animation: character-sneeze-hair 0.35s ease-in-out;
+}
+
+/* ───────────── Konuşma ───────────── */
+
+.character[data-talking] [data-layer='mustache'] {
+  animation: character-talk 115ms steps(2, end) infinite;
+}
+
+/* ───────────── Aktivite: pushing (logo-loop işçisi) ───────────── */
+
+.character[data-activity='pushing'] [data-layer='left-arm'] {
+  animation: character-push-left 2.4s ease-in-out infinite;
+  animation-delay: var(--arm-phase, 0s);
+}
+
+.character[data-activity='pushing'] [data-layer='right-arm'] {
+  animation: character-push-right 2.4s ease-in-out infinite;
+  animation-delay: var(--arm-phase, 0s);
+}
+
+/* ───────────── Aktivite: hauling (freight-elevator işçisi) ───────────── */
+
+.character[data-view='full'][data-activity='hauling'] .stage {
+  animation: character-heave 720ms cubic-bezier(0.3, 0.04, 0.5, 0.98) infinite alternate;
+}
+
+/* Kollar yukarıda halat tutar; sol/sağ dikey fark kaynaktaki top: 34% / 43% değerleridir. */
+.character[data-activity='hauling'] [data-layer='left-arm'] {
+  --arm-dy: 4;
+  rotate: -137deg;
+  translate: 0 calc(var(--u) * var(--arm-dy));
+  animation: character-pull-left 760ms cubic-bezier(0.5, 0.08, 0.4, 0.95) infinite;
+}
+
+.character[data-activity='hauling'] [data-layer='right-arm'] {
+  --arm-dy: 47;
+  rotate: 137deg;
+  translate: 0 calc(var(--u) * var(--arm-dy));
+  animation: character-pull-right 760ms cubic-bezier(0.5, 0.08, 0.4, 0.95) -380ms infinite;
+}
+
+.character[data-activity='hauling'] [data-layer='left-eyebrow'] {
+  animation: character-strain-left 760ms ease-in-out infinite alternate;
+}
+
+.character[data-activity='hauling'] [data-layer='right-eyebrow'] {
+  animation: character-strain-right 760ms ease-in-out infinite alternate;
+}
+
+.character[data-activity='hauling'] [data-layer='face'] {
+  filter: sepia(0.24) saturate(1.5) drop-shadow(0 0 5px #b54a3866);
+}
+
+.character[data-activity='hauling'] [data-layer='eyebags'] {
+  filter: contrast(1.15);
+}
+
+.character[data-activity='hauling'] [data-layer='mouth'],
+.character[data-activity='hauling'] [data-layer='mustache'] {
+  transform-origin: 50% 50%;
+  animation: character-breath-talk 190ms ease-in-out infinite alternate;
+}
+
+/* Efor efektleri */
+.fx {
+  position: absolute;
+  z-index: 500;
+  display: none;
+  pointer-events: none;
+}
+
+.fx-sweat {
+  top: 11%;
+  width: calc(var(--u) * 7);
+  height: calc(var(--u) * 11);
+  border: 1px solid #b9e8ef;
+  border-radius: 70% 35% 65% 55%;
+  background: #78c8dc;
+}
+
+.fx-sweat.fx-one {
+  left: 32%;
+}
+
+.fx-sweat.fx-two {
+  right: 31%;
+}
+
+.fx-steam {
+  top: 28%;
+  left: 48%;
+  width: calc(var(--u) * 12);
+  height: calc(var(--u) * 12);
+  border: 1px solid #e0e0d1;
+  border-radius: 50%;
+  opacity: 0;
+}
+
+.fx-steam.fx-two {
+  top: 25%;
+  left: 54%;
+}
+
+.character[data-activity='hauling'] .fx {
+  display: block;
+}
+
+.character[data-activity='hauling'] .fx-sweat {
+  animation: character-sweat 850ms ease-out infinite;
+}
+
+.character[data-activity='hauling'] .fx-steam {
+  animation: character-steam 950ms ease-out infinite;
+}
+
+.character[data-activity='hauling'] .fx-two {
+  animation-delay: 380ms;
+}
+
+/* ───────────── Konuşma balonu (guardian-head.css) ───────────── */
+
+.speech {
+  position: relative;
+  max-width: 28rem;
+  padding: 0;
+  font: 600 0.8rem/1.5 var(--font-mono, monospace);
+  color: #17202a;
+  overflow-wrap: anywhere;
+  visibility: hidden;
+}
+
+.speech.has-message {
+  padding: 0.65rem 0.85rem;
+  background: #f3e9cb;
+  border: 1px solid #2f383e;
+  box-shadow:
+    3px 3px 0 #10141838,
+    inset 0 1px 0 #fff9;
+  visibility: visible;
+}
+
+.speech.has-message::before {
+  content: '';
+  position: absolute;
+  left: -7px;
+  top: 50%;
+  width: 12px;
+  height: 12px;
+  border-left: 1px solid #2f383e;
+  border-bottom: 1px solid #2f383e;
+  background: #f3e9cb;
+  transform: translateY(-50%) rotate(45deg);
+}
+
+@media (max-width: 600px) {
+  :host {
+    gap: 0.35rem;
+  }
+
+  .speech {
+    font-size: 0.72rem;
+  }
+
+  .speech.has-message {
+    padding: 0.5rem 0.6rem;
+  }
+}
+
+/* ───────────── Keyframes ───────────── */
+
+@keyframes character-breathe {
+  0%,
+  100% {
+    transform: translateY(0) scale(1);
+  }
+  50% {
+    transform: translateY(calc(var(--u) * -4.8)) scale(1.01);
+  }
+}
+
+@keyframes character-breathe-sleep {
+  0%,
+  100% {
+    transform: translateY(0) scale(1);
+  }
+  50% {
+    transform: translateY(calc(var(--u) * -3.2)) scale(1.004);
+  }
+}
+
+@keyframes character-startle {
+  0%,
+  100% {
+    transform: translateY(0) scale(1);
+  }
+  25% {
+    transform: translateY(calc(var(--u) * -12.8)) scale(1.03);
+  }
+  55% {
+    transform: translateY(calc(var(--u) * 4)) scale(0.97);
+  }
+  78% {
+    transform: translateY(calc(var(--u) * -2.4)) scale(1.01);
+  }
+}
+
+@keyframes character-heave {
+  25% {
+    transform: rotate(-8deg) translateY(calc(var(--u) * 1));
+  }
+  72% {
+    transform: rotate(4deg) translateY(calc(var(--u) * 3));
+  }
+}
+
+@keyframes character-sneeze-face {
+  0%,
+  100% {
+    transform: translate(0);
+  }
+  25% {
+    transform: translate(calc(var(--u) * -4), calc(var(--u) * 3.2));
+  }
+  50% {
+    transform: translate(calc(var(--u) * 4), calc(var(--u) * -3.2));
+  }
+  75% {
+    transform: translate(calc(var(--u) * -2.9), calc(var(--u) * 4));
+  }
+}
+
+@keyframes character-sneeze-hair {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  50% {
+    transform: translateY(calc(var(--u) * -4)) rotate(-8deg);
+  }
+}
+
+@keyframes character-talk {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(calc(var(--u) * -2));
+  }
+}
+
+@keyframes character-fingertip {
+  0%,
+  100% {
+    opacity: 0.92;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.035);
+  }
+}
+
+@keyframes character-strike {
+  0% {
+    transform: scale(1);
+  }
+  38% {
+    transform: scale(0.78);
+  }
+  72% {
+    transform: scale(1.12);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes character-push-left {
+  0%,
+  100% {
+    rotate: -12deg;
+  }
+  50% {
+    rotate: -34deg;
+  }
+}
+
+@keyframes character-push-right {
+  0%,
+  100% {
+    rotate: 34deg;
+  }
+  50% {
+    rotate: 12deg;
+  }
+}
+
+@keyframes character-pull-left {
+  0%,
+  46%,
+  100% {
+    rotate: -137deg;
+    translate: 0 calc(var(--u) * var(--arm-dy));
+  }
+  59% {
+    rotate: -123deg;
+    translate: 0 calc(var(--u) * (var(--arm-dy) + 3));
+  }
+  82% {
+    rotate: -145deg;
+    translate: 0 calc(var(--u) * (var(--arm-dy) - 3));
+  }
+}
+
+@keyframes character-pull-right {
+  0%,
+  46%,
+  100% {
+    rotate: 137deg;
+    translate: 0 calc(var(--u) * var(--arm-dy));
+  }
+  59% {
+    rotate: 123deg;
+    translate: 0 calc(var(--u) * (var(--arm-dy) + 3));
+  }
+  82% {
+    rotate: 145deg;
+    translate: 0 calc(var(--u) * (var(--arm-dy) - 3));
+  }
+}
+
+@keyframes character-strain-left {
+  to {
+    transform: rotate(9deg) translateY(calc(var(--u) * 2));
+  }
+}
+
+@keyframes character-strain-right {
+  to {
+    transform: rotate(-9deg) translateY(calc(var(--u) * 2));
+  }
+}
+
+@keyframes character-breath-talk {
+  to {
+    transform: translateY(calc(var(--u) * 2)) scaleY(0.82);
+  }
+}
+
+@keyframes character-sweat {
+  0% {
+    opacity: 0;
+    transform: translate(0, 0) scale(0.5);
+  }
+  25% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(calc(var(--u) * 12), calc(var(--u) * 18)) scale(1.1);
+  }
+}
+
+@keyframes character-steam {
+  0% {
+    opacity: 0;
+    transform: scale(0.4);
+  }
+  25% {
+    opacity: 0.8;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(calc(var(--u) * 13), calc(var(--u) * -14)) scale(1.8);
+  }
+}
+
+/* ───────────── Nobel sahnesi: kol pozları ───────────── */
+.layer[data-layer$='-arm'] {
+  transition: rotate 0.32s var(--ease-mechanical, cubic-bezier(0.2, 0.8, 0.2, 1));
+}
+/* rest: kollar aşağıda (T-pozundan dar, kalabalık sahneye uygun) */
+.character:is([data-activity='rest'], [data-activity='raise-right'], [data-activity='strike']) [data-layer='left-arm'] { rotate: -80deg; }
+.character[data-activity='rest'] [data-layer='right-arm'] { rotate: 80deg; }
+/* raise-right: sağ kol yukarıda (oy kartı); cheer: iki kol V şeklinde yukarıda */
+.character[data-activity='raise-right'] [data-layer='right-arm'] { rotate: -58deg; }
+.character[data-activity='cheer'] [data-layer='left-arm'] { rotate: 58deg; }
+.character[data-activity='cheer'] [data-layer='right-arm'] { rotate: -58deg; }
+/* strike: sağ kol tokmak vurur (3 vuruş × 900 ms) */
+.character[data-activity='strike'] [data-layer='right-arm'] {
+  animation: character-gavel-strike var(--stage-gavel-duration, 900ms) cubic-bezier(0.3, 0.04, 0.5, 0.98) 3;
+}
+/* parmaklar kolla dönmez → kol döndüren aktivitelerde gizle */
+.character:is([data-activity='rest'], [data-activity='raise-right'], [data-activity='cheer'], [data-activity='strike']) [data-group='finger'] {
+  opacity: 0;
+  animation: none;
+}
+/* ifade başına hareket (mevcut nefes/irkilme kurallarından SONRA gelmeli) */
+.character[data-expression='cheer'] .stage { animation: character-hop 520ms var(--ease-signature, cubic-bezier(0.2, 0.8, 0.2, 1)) 2; }
+.character[data-expression='sad'] .stage { animation: character-slump 2.4s ease-in-out infinite; }
+
+@keyframes character-gavel-strike {
+  0%, 38%, 100% { rotate: -62deg; }
+  56% { rotate: 22deg; }
+  72% { rotate: 6deg; }
+}
+@keyframes character-hop {
+  0%, 100% { transform: translateY(0); }
+  40% { transform: translateY(calc(var(--u) * -16)); }
+}
+@keyframes character-slump {
+  0%, 100% { transform: translateY(calc(var(--u) * 5)); }
+  50% { transform: translateY(calc(var(--u) * 8)); }
+}
+
+/* ───────────── Azaltılmış hareket (kaynaktaki tüm reduced-motion kuralları) ───────────── */
+
+@media (prefers-reduced-motion: reduce) {
+  .stage,
+  .layer,
+  .eye,
+  .eye-pupil,
+  .fx {
+    animation: none !important;
+    transition: none !important;
+  }
+}

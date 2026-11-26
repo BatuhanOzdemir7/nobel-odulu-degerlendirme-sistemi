@@ -1,0 +1,92 @@
+<div
+  #root
+  class="character"
+  [attr.role]="interactive() ? 'group' : 'img'"
+  [attr.aria-label]="label() || null"
+  [attr.data-view]="cropped() ? 'crop' : 'full'"
+  [attr.data-mode]="state().mode"
+  [attr.data-expression]="state().expression"
+  [attr.data-activity]="state().activity"
+  [attr.data-blinking]="state().blinking ? '' : null"
+  [attr.data-talking]="state().talking ? '' : null"
+  [attr.data-typing]="state().typing ? '' : null"
+  [attr.data-hovered-finger]="state().hoveredFinger"
+  [style.aspect-ratio]="view().box.w + ' / ' + view().box.h"
+>
+  <div #stage class="stage" [style]="stageStyle()">
+    <!-- Gövde, kollar, parmaklar: düz yığılır (z = grup × 100 + katman) -->
+    @for (layer of flatLayers(); track layer.id) {
+      <img
+        class="layer"
+        alt=""
+        draggable="false"
+        [src]="layer.src"
+        [style]="layer.style"
+        [attr.data-layer]="layer.id"
+        [attr.data-group]="layer.group"
+        [attr.data-finger-kind]="layer.fingerKind"
+        [attr.data-pressed]="layer.control && state().pressedFinger === layer.control ? '' : null"
+        [attr.role]="layer.label ? 'button' : null"
+        [attr.tabindex]="layer.label ? 0 : null"
+        [attr.aria-label]="layer.label"
+        (click)="activate(layer.control)"
+        (keydown.enter)="activate(layer.control)"
+        (keydown.space)="$event.preventDefault(); activate(layer.control)"
+        (pointerenter)="hover(layer.control, true)"
+        (pointerleave)="hover(layer.control, false)"
+        (focus)="hover(layer.control, true)"
+        (blur)="hover(layer.control, false)"
+      />
+    }
+
+    <!-- Baş: tek kapsayıcı; eğim ve paralaks buna uygulanır, z yerel -->
+    <div class="head">
+      @for (layer of headLayers(); track layer.id) {
+        <img
+          class="layer"
+          alt=""
+          draggable="false"
+          [src]="layer.src"
+          [style]="layer.style"
+          [attr.data-layer]="layer.id"
+          [attr.data-group]="layer.group"
+          [attr.data-booped]="layer.id === 'nose' && state().nosePressed ? '' : null"
+          [attr.data-drag-axis]="layer.drag?.axis ?? null"
+          [attr.data-drag-min]="layer.drag?.min ?? null"
+          [attr.data-drag-max]="layer.drag?.max ?? null"
+          [attr.role]="layer.label ? 'button' : null"
+          [attr.tabindex]="layer.label ? 0 : null"
+          [attr.aria-label]="layer.label"
+          (click)="activate(layer.control)"
+          (keydown.enter)="activate(layer.control)"
+          (keydown.space)="$event.preventDefault(); activate(layer.control)"
+        />
+      }
+      @for (eye of eyes(); track eye.side) {
+        <span
+          class="eye"
+          [style]="eye.style"
+          [attr.data-eye]="eye.side"
+          [attr.role]="eye.label ? 'button' : null"
+          [attr.tabindex]="eye.label ? 0 : null"
+          [attr.aria-label]="eye.label"
+          (click)="activate(eye.control)"
+          (keydown.enter)="activate(eye.control)"
+          (keydown.space)="$event.preventDefault(); activate(eye.control)"
+        >
+          <img class="eye-white" alt="" draggable="false" [src]="eye.whiteSrc" />
+          <img class="eye-pupil" alt="" draggable="false" [src]="eye.pupilSrc" />
+        </span>
+      }
+    </div>
+
+    <!-- Efor efektleri: yalnızca activity="hauling" iken görünür -->
+    <span class="fx fx-sweat fx-one" aria-hidden="true"></span>
+    <span class="fx fx-sweat fx-two" aria-hidden="true"></span>
+    <span class="fx fx-steam fx-one" aria-hidden="true"></span>
+    <span class="fx fx-steam fx-two" aria-hidden="true"></span>
+  </div>
+</div>
+<div class="speech" role="status" aria-live="polite" aria-atomic="true" [class.has-message]="!!message()">
+  {{ message() }}
+</div>
