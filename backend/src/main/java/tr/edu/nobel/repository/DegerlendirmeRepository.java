@@ -6,9 +6,9 @@ import tr.edu.nobel.dto.response.DegerlendirmeResponse;
 import java.util.List;
 
 public interface DegerlendirmeRepository extends JpaRepository<Degerlendirme, Long> {
-    boolean existsByKomiteIdAndAdayId(Long komiteId, Long adayId);
+    boolean existsByKomiteIdAndAdayIdAndKesinlesmisTrue(Long komiteId, Long adayId);
 
-    List<Degerlendirme> findByKomiteIdOrderByTarihDescDegerlendirmeIdDesc(Long komiteId);
+    List<Degerlendirme> findByKomiteIdAndKesinlesmisTrueOrderByTarihDescDegerlendirmeIdDesc(Long komiteId);
 
     @Query("""
             SELECT new tr.edu.nobel.dto.response.DegerlendirmeResponse(

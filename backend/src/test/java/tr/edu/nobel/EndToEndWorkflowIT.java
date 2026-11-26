@@ -22,6 +22,42 @@ class EndToEndWorkflowIT extends PortalWorkflowITSupport {
     @Autowired Clock clock;
 
     @Test
+    void preliminaryEvaluationsDoNotBlockVotingOrSameDayFinalization() throws Exception {
+        long committee = firstCommittee();
+        long candidate = jdbc.queryForObject("""
+                SELECT aday_id FROM degerlendirme WHERE komite_id = ? AND sonuc = 'Ön değerlendirmede başarılı'
+                """, Long.class, committee);
+        LocalDate today = LocalDate.now(clock);
+        jdbc.update("""
+                INSERT INTO degerlendirme (aday_id, komite_id, tarih, sonuc, olcut)
+                VALUES (?, ?, ?, 'İnceleme sürüyor', 'Özgünlük')
+                """, candidate, committee, today);
+
+        String first = bearer("uzman_1", "123456");
+        String second = bearer("uzman_2", "123456");
+        String third = bearer("uzman_3", "123456");
+        var candidateList = get(EXPERT + "/komiteler/" + committee + "/adaylar")
+                .header(HttpHeaders.AUTHORIZATION, first);
+        String matchingCandidate = "$[?(@.adayId == " + candidate + ")]";
+        mvc.perform(get(EXPERT + "/komitelerim").header(HttpHeaders.AUTHORIZATION, first))
+                .andExpect(status().isOk()).andExpect(jsonPath("$[0].bekleyenAdaySayisi").value(1));
+        mvc.perform(candidateList).andExpect(status().isOk())
+                .andExpect(jsonPath(matchingCandidate + ".finalized").value(contains(false)));
+
+        vote(first, committee, candidate, OyKarari.KABUL).andExpect(status().isCreated());
+        vote(second, committee, candidate, OyKarari.KABUL).andExpect(status().isCreated());
+        vote(third, committee, candidate, OyKarari.RED).andExpect(status().isCreated())
+                .andExpect(jsonPath("$.kararKesinlesti").value(true))
+                .andExpect(jsonPath("$.degerlendirme.sonuc").value("KABUL"));
+        vote(first, committee, candidate, OyKarari.RED).andExpect(status().isConflict());
+        mvc.perform(candidateList).andExpect(status().isOk())
+                .andExpect(jsonPath(matchingCandidate + ".finalized").value(contains(true)));
+        assertThat(jdbc.queryForList("""
+                SELECT sonuc FROM degerlendirme WHERE aday_id = ? AND komite_id = ? AND tarih = ?
+                """, String.class, candidate, committee, today)).containsExactlyInAnyOrder("İnceleme sürüyor", "KABUL");
+    }
+
+    @Test
     void recordsNominationsAndVotesThenPublishesOneFinalDecision() throws Exception {
         long committee = firstCommittee();
         long award = physicsAward();

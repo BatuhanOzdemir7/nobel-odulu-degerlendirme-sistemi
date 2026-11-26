@@ -1,5 +1,6 @@
 package tr.edu.nobel.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -19,6 +20,9 @@ public class Degerlendirme {
     private LocalDate tarih;
     @Column(name = "sonuc", nullable = false, length = 100)
     private String sonuc;
+    @JsonIgnore
+    @Column(name = "kesinlesmis", insertable = false, updatable = false)
+    private boolean kesinlesmis;
     @Column(name = "olcut", nullable = false, length = 255)
     private String olcut;
 }

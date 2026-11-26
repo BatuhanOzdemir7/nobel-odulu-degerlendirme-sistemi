@@ -28,7 +28,7 @@ class PrivacyModeIT extends AuthPostgresIntegration {
                     .andExpect(jsonPath("$.adayliklar[0].tarih").isEmpty())
                     .andExpect(jsonPath("$.adayliklar[0].saat").isEmpty())
                     .andExpect(jsonPath("$.adayliklar[0].sonuc").isEmpty())
-                    .andExpect(jsonPath("$.adayliklar[0].asama").value("KARAR_VERILDI"))
+                    .andExpect(jsonPath("$.adayliklar[0].asama").value("KOMITE_INCELEMESINDE"))
                     .andExpect(jsonPath("$.degerlendirmeler.length()").value(0));
         } finally {
             changeMode(admin, settings, "SEFFAF");

@@ -37,8 +37,8 @@ public final class PortalMapper {
 
     public static AdayGostermeGorunumResponse nomination(AdayGostermeRepository.Details row) {
         AdaylikAsamasi stage = AdaylikAsamasi.ADAYLIK_ALINDI;
-        if (row.getSonuc() != null) stage = AdaylikAsamasi.KARAR_VERILDI;
-        else if (row.getInceleniyor()) stage = AdaylikAsamasi.KOMITE_INCELEMESINDE;
+        if (row.getKesinlesmis()) stage = AdaylikAsamasi.KARAR_VERILDI;
+        else if (row.getSonuc() != null || row.getInceleniyor()) stage = AdaylikAsamasi.KOMITE_INCELEMESINDE;
         return new AdayGostermeGorunumResponse(row.getAdayGostermeId(), row.getAdayId(), row.getAdayAdi(),
                 row.getOdulId(), row.getOdulAdi(), row.getKategoriAdi(), row.getKurulusAdi(),
                 row.getTarih(), row.getSaat(), stage, row.getSonuc());

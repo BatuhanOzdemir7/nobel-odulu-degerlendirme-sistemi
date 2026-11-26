@@ -29,7 +29,7 @@ public interface AdayRepository extends JpaRepository<Aday, Long> {
                 SELECT 1 FROM AdayGosterme n, Odul o
                 WHERE n.adayId = a.adayId AND n.odulNo = o.odulNo AND o.kategoriId = :kategoriId
             ) AND NOT EXISTS (
-                SELECT 1 FROM Degerlendirme d WHERE d.adayId = a.adayId AND d.komiteId = :komiteId
+                SELECT 1 FROM Degerlendirme d WHERE d.adayId = a.adayId AND d.komiteId = :komiteId AND d.kesinlesmis = true
             )
             """)
     long countPendingForCommittee(Long kategoriId, Long komiteId);

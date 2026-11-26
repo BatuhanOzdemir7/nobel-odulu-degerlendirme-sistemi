@@ -53,14 +53,23 @@ class UzmanOyuSchemaIT extends AuthPostgresIntegration {
         }
         String schema = "phase_2a_upgrade";
         Flyway.configure().dataSource(dataSource).schemas(schema).locations("filesystem:" + baseline).load().migrate();
+        jdbc.update("""
+                INSERT INTO phase_2a_upgrade.degerlendirme (aday_id, komite_id, tarih, sonuc, olcut)
+                SELECT aday_id, komite_id, tarih + 1, 'KABUL', olcut
+                FROM phase_2a_upgrade.degerlendirme WHERE sonuc = 'Ön değerlendirmede başarılı'
+                """);
         Flyway.configure().dataSource(dataSource).schemas(schema).outOfOrder(true).load().migrate();
+
+        assertThat(jdbc.queryForList("""
+                SELECT sonuc FROM phase_2a_upgrade.degerlendirme WHERE kesinlesmis
+                """, String.class)).containsExactly("KABUL");
 
         assertThat(jdbc.queryForList("""
                 SELECT version FROM phase_2a_upgrade.flyway_schema_history
                 WHERE success AND version IS NOT NULL ORDER BY installed_rank
-                """, String.class)).containsExactly("1", "2", "3", "5", "4");
+                """, String.class)).containsExactly("1", "2", "3", "5", "4", "6");
         assertThat(jdbc.queryForList("SELECT version FROM flyway_schema_history WHERE success ORDER BY installed_rank",
-                String.class)).containsExactly("1", "2", "3", "4", "5");
+                String.class)).containsExactly("1", "2", "3", "4", "5", "6");
 
         var upgraded = entityManagers.dataSource(dataSource).packages("tr.edu.nobel.entity")
                 .persistenceUnit("phase2b-upgrade-validation")

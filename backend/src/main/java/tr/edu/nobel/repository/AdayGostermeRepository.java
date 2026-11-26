@@ -13,7 +13,7 @@ public interface AdayGostermeRepository extends JpaRepository<AdayGosterme, Long
             SELECT n.aday_gosterme_id AS "adayGostermeId", n.aday_id AS "adayId",
                    concat_ws(' ', a.ad, a.soyad) AS "adayAdi", n.odul_no AS "odulId",
                    o.aciklayici_ad AS "odulAdi", k.kategori_adi AS "kategoriAdi", r.ad AS "kurulusAdi",
-                   n.tarih, n.saat, d.sonuc,
+                   n.tarih, n.saat, d.sonuc, coalesce(d.kesinlesmis, false) AS "kesinlesmis",
                    EXISTS (SELECT 1 FROM uzman_oyu v
                            JOIN degerlendirme_komitesi c ON c.komite_id = v.komite_id
                            WHERE v.aday_id = n.aday_id AND c.kategori_id = o.kategori_id) AS "inceleniyor"
@@ -21,9 +21,10 @@ public interface AdayGostermeRepository extends JpaRepository<AdayGosterme, Long
             JOIN odul o ON o.odul_no = n.odul_no JOIN kategori k ON k.kategori_id = o.kategori_id
             JOIN kurulus r ON r.kurulus_no = n.kurulus_no
             LEFT JOIN LATERAL (
-                SELECT e.sonuc FROM degerlendirme e JOIN degerlendirme_komitesi c ON c.komite_id = e.komite_id
+                SELECT e.sonuc, e.kesinlesmis FROM degerlendirme e
+                JOIN degerlendirme_komitesi c ON c.komite_id = e.komite_id
                 WHERE e.aday_id = n.aday_id AND c.kategori_id = o.kategori_id
-                ORDER BY e.tarih DESC, e.degerlendirme_id DESC LIMIT 1
+                ORDER BY e.kesinlesmis DESC, e.tarih DESC, e.degerlendirme_id DESC LIMIT 1
             ) d ON true
             """;
     String ORDER = " ORDER BY n.tarih DESC, n.saat DESC, n.aday_gosterme_id DESC";
@@ -56,6 +57,7 @@ public interface AdayGostermeRepository extends JpaRepository<AdayGosterme, Long
         LocalDate getTarih();
         LocalTime getSaat();
         String getSonuc();
+        boolean getKesinlesmis();
         boolean getInceleniyor();
     }
 }

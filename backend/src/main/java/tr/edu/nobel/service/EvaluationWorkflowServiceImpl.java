@@ -65,7 +65,7 @@ public class EvaluationWorkflowServiceImpl implements EvaluationWorkflowService 
         Map<Long, List<OyResponse>> votesByCandidate = votes.findByKomiteIdOrderByOyId(komiteId).stream()
                 .map(vote -> PortalMapper.vote(vote, context.labels().get(vote.getUzmanId())))
                 .collect(Collectors.groupingBy(OyResponse::adayId));
-        Map<Long, Degerlendirme> decisions = evaluations.findByKomiteIdOrderByTarihDescDegerlendirmeIdDesc(komiteId)
+        Map<Long, Degerlendirme> decisions = evaluations.findByKomiteIdAndKesinlesmisTrueOrderByTarihDescDegerlendirmeIdDesc(komiteId)
                 .stream().collect(Collectors.toMap(Degerlendirme::getAdayId, Function.identity(), (newest, older) -> newest));
 
         return candidates.findNominatedInCategory(context.committee().getKategoriId()).stream().map(candidate -> {
@@ -154,7 +154,7 @@ public class EvaluationWorkflowServiceImpl implements EvaluationWorkflowService 
     private Aday eligibleCandidate(CommitteeContext context, Long adayId) {
         Aday candidate = candidates.findById(adayId).orElseThrow(() -> new ResourceNotFoundException("Aday bulunamadı."));
         if (!nominations.existsInCategory(adayId, context.committee().getKategoriId())) throw new CategoryMismatchException();
-        if (evaluations.existsByKomiteIdAndAdayId(context.committee().getKomiteId(), adayId)) {
+        if (evaluations.existsByKomiteIdAndAdayIdAndKesinlesmisTrue(context.committee().getKomiteId(), adayId)) {
             throw new BusinessRuleException("Bu aday için komite kararı kesinleşti.");
         }
         return candidate;
