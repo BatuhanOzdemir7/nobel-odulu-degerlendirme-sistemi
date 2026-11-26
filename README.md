@@ -15,6 +15,8 @@ PostgreSQL şeması Flyway ile yönetilir; Hibernate yalnızca şemayı doğrula
 3. Yeni bir terminalde frontend'i başlatın: `cd frontend`, `npm install`, sonra `npm start`.
 4. Arayüz: http://localhost:4200 — API: http://localhost:8080/api — Swagger UI: http://localhost:8080/swagger-ui.html.
 
+Tek tıkla demo girişi için backend'i `mvn spring-boot:run "-Dspring-boot.run.arguments=--server.address=127.0.0.1 --nobel.security.local-demo-login=true"` ile başlatın ve Angular geliştirme arayüzünü `http://localhost:4200/login` adresinden açın. Demo girişi varsayılan olarak kapalıdır.
+
 İlk backend başlangıcında Flyway `V1__init_schema.sql` ve `V2__seed_data.sql` dosyalarını uygular. Veritabanı kalıcı `postgres_data` volume'unda tutulur.
 Yerel geliştirme veritabanı bağlantısı: `nobel_db` / `nobel_user` / `nobel_password`.
 

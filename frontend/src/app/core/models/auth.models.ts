@@ -1,7 +1,7 @@
 export type Rol = 'ADMIN' | 'KURULUS' | 'ADAY' | 'UZMAN';
 
 export interface AuthUser {
-  kullaniciId: number;
+  kullaniciId: number | null;
   kullaniciAdi: string;
   rol: Rol;
   kurulusNo: number | null;
@@ -13,6 +13,12 @@ export interface AuthUser {
 export interface LoginRequest {
   kullaniciAdi: string;
   sifre: string;
+}
+
+export interface DemoAccount {
+  rol: Rol;
+  id: number;
+  displayName: string;
 }
 
 export interface LoginResponse {

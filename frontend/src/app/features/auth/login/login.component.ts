@@ -1,11 +1,24 @@
-import { ChangeDetectionStrategy, Component, DestroyRef, inject, isDevMode, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, DestroyRef, inject, isDevMode, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { finalize } from 'rxjs';
-import { LoginRequest } from '../../../core/models/auth.models';
+import { catchError, concat, debounceTime, EMPTY, filter, finalize, fromEvent, merge, Observable, of, switchMap } from 'rxjs';
+import type { ActivityAction } from '../../../core/events/activity-event.model';
+import { ActivityStreamService } from '../../../core/events/activity-stream.service';
+import { DemoAccount, LoginResponse, Rol } from '../../../core/models/auth.models';
 import { AuthService } from '../../../core/services/auth.service';
 import { apiErrorMessage } from '../../../shared/api-error';
+
+const DEMO_GROUPS: { rol: Rol; label: string }[] = [
+  { rol: 'ADMIN', label: 'Yöneticiler' },
+  { rol: 'KURULUS', label: 'Kuruluşlar' },
+  { rol: 'UZMAN', label: 'Uzmanlar' },
+  { rol: 'ADAY', label: 'Adaylar' },
+];
+
+const ACCOUNT_CHANGES = new Set<ActivityAction>([
+  'REGISTRY_CREATED', 'REGISTRY_UPDATED', 'REGISTRY_DELETED', 'NOMINATION_CREATED',
+]);
 
 @Component({
   selector: 'nobel-login',
@@ -20,6 +33,7 @@ export class LoginComponent {
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly accounts = signal<DemoAccount[] | null>(null);
 
   protected readonly form = inject(FormBuilder).nonNullable.group({
     kullaniciAdi: ['', Validators.required],
@@ -28,28 +42,49 @@ export class LoginComponent {
   protected readonly loading = signal(false);
   protected readonly error = signal('');
   protected readonly expired = this.route.snapshot.queryParamMap.get('reason') === 'expired';
-  protected readonly demoAccounts = isDevMode() ? [
-    { label: 'Yönetici', kullaniciAdi: 'admin', sifre: 'admin123' },
-    { label: 'Kuruluş', kullaniciAdi: 'kurulus_cern', sifre: '123456' },
-    { label: 'Uzman', kullaniciAdi: 'uzman_1', sifre: '123456' },
-    { label: 'Aday', kullaniciAdi: 'aday_1', sifre: '123456' },
-  ] : [];
+  protected readonly demoEnabled = computed(() => this.accounts() !== null);
+  protected readonly demoGroups = computed(() => {
+    const accounts = this.accounts() ?? [];
+    return DEMO_GROUPS.map(group => ({
+      ...group, accounts: accounts.filter(account => account.rol === group.rol),
+    })).filter(group => group.accounts.length > 0);
+  });
 
-  protected fillDemo({ kullaniciAdi, sifre }: LoginRequest): void {
-    this.form.setValue({ kullaniciAdi, sifre });
-    this.error.set('');
+  constructor() {
+    if (!isDevMode()) return;
+    const activity = inject(ActivityStreamService);
+    const refresh = merge(
+      activity.events$.pipe(filter(event => ACCOUNT_CHANGES.has(event.action))),
+      fromEvent(window, 'focus'),
+    ).pipe(
+      debounceTime(80),
+      switchMap(() => this.auth.demoAccounts().pipe(catchError(() => EMPTY))),
+    );
+    this.auth.demoAccounts().pipe(
+      switchMap(accounts => concat(of(accounts), refresh)),
+      catchError(() => EMPTY),
+      takeUntilDestroyed(this.destroyRef),
+    ).subscribe(accounts => this.accounts.set(accounts));
   }
 
   protected submit(): void {
     if (this.form.invalid || this.loading()) return;
+    this.openSession(this.auth.login(this.form.getRawValue()), this.route.snapshot.queryParamMap.get('returnUrl') ?? '');
+  }
+
+  protected submitDemo(account: DemoAccount): void {
+    if (this.loading()) return;
+    this.openSession(this.auth.loginDemo(account), '');
+  }
+
+  private openSession(login: Observable<LoginResponse>, returnUrl: string): void {
     this.error.set('');
     this.loading.set(true);
-    this.auth.login(this.form.getRawValue()).pipe(
+    login.pipe(
       takeUntilDestroyed(this.destroyRef),
       finalize(() => this.loading.set(false)),
     ).subscribe({
       next: ({ user }) => {
-        const returnUrl = this.route.snapshot.queryParamMap.get('returnUrl') ?? '';
         const internal = returnUrl.startsWith('/') && !returnUrl.startsWith('//') && !returnUrl.includes('\\');
         void this.router.navigateByUrl(internal ? returnUrl : this.auth.homeFor(user.rol), { replaceUrl: true });
       },

@@ -23,12 +23,24 @@
         {{ loading() ? 'Giriş yapılıyor…' : 'Giriş yap' }}
       </button>
     </form>
-    @if (demoAccounts.length) {
+    @if (demoEnabled()) {
       <fieldset class="demo">
-        <legend>Demo Hesap Doldur</legend>
-        @for (demo of demoAccounts; track demo.kullaniciAdi) {
-          <button class="secondary" type="button" [disabled]="loading()" (click)="fillDemo(demo)">{{ demo.label }}</button>
-        }
+        <legend>Demo hesaplar</legend>
+        <div class="demo-groups">
+          @for (group of demoGroups(); track group.rol) {
+            <section class="demo-group" [attr.aria-labelledby]="'demo-' + group.rol">
+              <h2 [id]="'demo-' + group.rol">{{ group.label }}</h2>
+              <ul class="demo-accounts">
+                @for (account of group.accounts; track account.id) {
+                  <li><button class="secondary" type="button" [disabled]="loading()"
+                              (click)="submitDemo(account)">{{ account.displayName }}</button></li>
+                }
+              </ul>
+            </section>
+          } @empty {
+            <p class="notice" role="status">Listelenecek demo hesabı bulunamadı.</p>
+          }
+        </div>
       </fieldset>
     }
   </section>

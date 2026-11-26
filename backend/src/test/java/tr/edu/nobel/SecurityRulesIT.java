@@ -8,6 +8,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import static org.hamcrest.Matchers.containsString;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.options;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -17,6 +18,14 @@ class SecurityRulesIT extends AuthPostgresIntegration {
     private static final String TEST_PASSWORD = "kurulus-test-sifre";
 
     @Autowired PasswordEncoder passwords;
+
+    @Test
+    void demoLoginIsDisabledByDefault() throws Exception {
+        mvc.perform(get("/api/auth/demo-accounts").header(HttpHeaders.ORIGIN, "http://localhost:4200"))
+                .andExpect(status().isUnauthorized());
+        mvc.perform(post("/api/auth/demo-login").header(HttpHeaders.ORIGIN, "http://localhost:4200"))
+                .andExpect(status().isUnauthorized());
+    }
 
     @Test
     void adminCanUseExistingCrudAndOtherRolesReceiveJsonForbidden() throws Exception {

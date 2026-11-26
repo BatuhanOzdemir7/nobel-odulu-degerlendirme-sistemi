@@ -1,11 +1,13 @@
 import { HttpClient, HttpContext, HttpContextToken, HttpErrorResponse } from '@angular/common/http';
 import { computed, inject, Injectable, signal } from '@angular/core';
 import { firstValueFrom, Observable, tap } from 'rxjs';
-import { AuthUser, LoginRequest, LoginResponse, Rol } from '../models/auth.models';
+import { AuthUser, DemoAccount, LoginRequest, LoginResponse, Rol } from '../models/auth.models';
 import { API_BASE_URL } from './api-url';
 
 export const AUTH_TOKEN_STORAGE_KEY = 'nobel.accessToken';
 export const LOGIN_URL = `${API_BASE_URL}/auth/login`;
+export const DEMO_ACCOUNTS_URL = `${API_BASE_URL}/auth/demo-accounts`;
+export const DEMO_LOGIN_URL = `${API_BASE_URL}/auth/demo-login`;
 export const RESTORING_SESSION = new HttpContextToken(() => false);
 
 const HOMES: Record<Rol, string> = {
@@ -29,17 +31,15 @@ export class AuthService {
   }
 
   login(request: LoginRequest): Observable<LoginResponse> {
-    return this.http.post<LoginResponse>(LOGIN_URL, request).pipe(
-      tap(({ accessToken, user }) => {
-        this.accessToken = accessToken;
-        this.currentUser.set(user);
-        try {
-          sessionStorage.setItem(AUTH_TOKEN_STORAGE_KEY, accessToken);
-        } catch {
-          // Oturum, tarayıcı depolamayı engellese de bu sayfada çalışır.
-        }
-      }),
-    );
+    return this.http.post<LoginResponse>(LOGIN_URL, request).pipe(tap(response => this.saveSession(response)));
+  }
+
+  demoAccounts(): Observable<DemoAccount[]> {
+    return this.http.get<DemoAccount[]>(DEMO_ACCOUNTS_URL);
+  }
+
+  loginDemo({ rol, id }: DemoAccount): Observable<LoginResponse> {
+    return this.http.post<LoginResponse>(DEMO_LOGIN_URL, { rol, id }).pipe(tap(response => this.saveSession(response)));
   }
 
   logout(): void {
@@ -87,5 +87,15 @@ export class AuthService {
 
   homeFor(rol: Rol): string {
     return HOMES[rol];
+  }
+
+  private saveSession({ accessToken, user }: LoginResponse): void {
+    this.accessToken = accessToken;
+    this.currentUser.set(user);
+    try {
+      sessionStorage.setItem(AUTH_TOKEN_STORAGE_KEY, accessToken);
+    } catch {
+      // Oturum, tarayıcı depolamayı engellese de bu sayfada çalışır.
+    }
   }
 }

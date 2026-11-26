@@ -3,10 +3,11 @@ import { inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { catchError, throwError } from 'rxjs';
 import { API_BASE_URL, SHOW_FORBIDDEN_IN_VIEW } from '../services/api-url';
-import { AuthService, LOGIN_URL, RESTORING_SESSION } from '../services/auth.service';
+import { AuthService, DEMO_ACCOUNTS_URL, DEMO_LOGIN_URL, LOGIN_URL, RESTORING_SESSION } from '../services/auth.service';
 
 const api = new URL(API_BASE_URL);
-const loginPath = new URL(LOGIN_URL).pathname;
+const loginPaths = [LOGIN_URL, DEMO_LOGIN_URL].map(url => new URL(url).pathname);
+const demoAccountsPath = new URL(DEMO_ACCOUNTS_URL).pathname;
 
 export const authInterceptor: HttpInterceptorFn = (request, next) => {
   let url: URL;
@@ -18,7 +19,8 @@ export const authInterceptor: HttpInterceptorFn = (request, next) => {
   if (url.origin !== api.origin || (url.pathname !== api.pathname && !url.pathname.startsWith(`${api.pathname}/`))) {
     return next(request);
   }
-  if (url.pathname === loginPath && request.method === 'POST') return next(request);
+  if ((request.method === 'POST' && loginPaths.includes(url.pathname)) ||
+      (request.method === 'GET' && url.pathname === demoAccountsPath)) return next(request);
 
   const auth = inject(AuthService);
   const router = inject(Router);

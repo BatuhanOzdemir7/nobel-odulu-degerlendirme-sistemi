@@ -26,6 +26,7 @@ nobel:
   evaluation:
     quorum: 3
   security:
+    local-demo-login: ${NOBEL_LOCAL_DEMO_LOGIN:false}
     jwt:
       secret: ${NOBEL_JWT_SECRET:dev-only-secret-change-me-dev-only-secret-change-me}
       expiration: PT8H
