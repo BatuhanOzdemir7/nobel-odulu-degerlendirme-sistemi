@@ -5,6 +5,8 @@ import jakarta.validation.ConstraintViolationException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.transaction.TransactionSystemException;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.FieldError;
@@ -14,12 +16,29 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import tr.edu.nobel.dto.response.ApiError;
 
 import java.sql.SQLException;
-import java.time.Instant;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+    private final ApiErrorFactory errors;
+
+    public GlobalExceptionHandler(ApiErrorFactory errors) {
+        this.errors = errors;
+    }
+
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<ApiError> accessDenied(AccessDeniedException ex, HttpServletRequest request) {
+        return error(HttpStatus.FORBIDDEN, ApiErrorFactory.ACCESS_DENIED, request, Map.of());
+    }
+
+    @ExceptionHandler(AuthenticationException.class)
+    public ResponseEntity<ApiError> authentication(AuthenticationException ex, HttpServletRequest request) {
+        String message = ex instanceof InvalidCredentialsException
+                ? ex.getMessage() : ApiErrorFactory.AUTHENTICATION_REQUIRED;
+        return error(HttpStatus.UNAUTHORIZED, message, request, Map.of());
+    }
+
     @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<ApiError> notFound(ResourceNotFoundException ex, HttpServletRequest request) {
         return error(HttpStatus.NOT_FOUND, ex.getMessage(), request, Map.of());
@@ -60,7 +79,6 @@ public class GlobalExceptionHandler {
 
     private ResponseEntity<ApiError> error(HttpStatus status, String message, HttpServletRequest request,
                                            Map<String, String> fieldErrors) {
-        return ResponseEntity.status(status).body(new ApiError(Instant.now(), status.value(),
-                status.getReasonPhrase(), message, request.getRequestURI(), fieldErrors));
+        return ResponseEntity.status(status).body(errors.create(status, message, request.getRequestURI(), fieldErrors));
     }
 }

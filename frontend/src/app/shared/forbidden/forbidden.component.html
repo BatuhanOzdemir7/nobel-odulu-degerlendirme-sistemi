@@ -1,0 +1,11 @@
+<main>
+  <section class="panel">
+    <h1>Erişim engellendi</h1>
+    <p>Bu sayfaya erişim yetkiniz yok.</p>
+    @if (auth.user(); as user) {
+      <a [routerLink]="auth.homeFor(user.rol)">Portalınıza dönün</a>
+    } @else {
+      <a routerLink="/login">Giriş sayfasına dönün</a>
+    }
+  </section>
+</main>

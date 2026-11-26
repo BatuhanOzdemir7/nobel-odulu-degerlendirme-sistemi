@@ -1,0 +1,17 @@
+<header class="topbar">
+  <a class="brand" routerLink="/admin">Nobel <span>Değerlendirme Sistemi</span></a>
+  <nav aria-label="Ana menü">
+    <a routerLink="kayitlar" routerLinkActive="active" ariaCurrentWhenActive="page">Kategoriler &amp; Ödüller</a>
+    <a routerLink="adaylar" routerLinkActive="active" ariaCurrentWhenActive="page">Adaylar &amp; Kuruluşlar</a>
+    <a routerLink="uzmanlar-komiteler" routerLinkActive="active" ariaCurrentWhenActive="page">Uzmanlar &amp; Komiteler</a>
+    <a routerLink="aday-gosterme" routerLinkActive="active" ariaCurrentWhenActive="page">Aday Gösterme</a>
+    <a routerLink="degerlendirmeler" routerLinkActive="active" ariaCurrentWhenActive="page">Değerlendirmeler</a>
+  </nav>
+  <div class="session">
+    <span>{{ auth.user()?.displayName }}</span>
+    <button type="button" class="secondary" (click)="logout()">Çıkış</button>
+  </div>
+</header>
+<main>
+  <router-outlet />
+</main>

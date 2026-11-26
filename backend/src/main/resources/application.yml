@@ -16,6 +16,14 @@ spring:
   flyway:
     enabled: true
     locations: classpath:db/migration
+    # Faz 2B'deki V4, Faz 2A'da uygulanmış V5'in ardından çalışabilmeli.
+    out-of-order: true
+nobel:
+  time-zone: Europe/Istanbul
+  security:
+    jwt:
+      secret: ${NOBEL_JWT_SECRET:dev-only-secret-change-me-dev-only-secret-change-me}
+      expiration: PT8H
 server:
   port: 8080
 springdoc:

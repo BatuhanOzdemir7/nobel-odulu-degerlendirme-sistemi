@@ -1,0 +1,20 @@
+<header class="topbar">
+  <span class="brand">Nobel <span>Değerlendirme Sistemi</span></span>
+  <button type="button" class="secondary" (click)="logout()">Çıkış</button>
+</header>
+<main>
+  <section class="panel">
+    @if (auth.user(); as user) {
+      <h1>{{ user.displayName }}</h1>
+      <p>
+        @switch (user.rol) {
+          @case ('KURULUS') { Kuruluş portalı }
+          @case ('ADAY') { Aday portalı }
+          @case ('UZMAN') { Uzman portalı }
+        }
+        · {{ user.kullaniciAdi }}
+      </p>
+    }
+    <p>Bu portal Faz 2B'de etkinleşecek.</p>
+  </section>
+</main>

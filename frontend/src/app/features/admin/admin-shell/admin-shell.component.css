@@ -1,0 +1,5 @@
+nav { display: flex; flex-wrap: wrap; gap: 6px; }
+nav a { border-radius: 7px; padding: 9px 12px; color: #e3efea; text-decoration: none; }
+nav a:hover, nav a.active { background: #235a52; color: white; }
+.session { display: flex; align-items: center; gap: 12px; white-space: nowrap; }
+@media (max-width: 900px) { nav { width: 100%; } }
