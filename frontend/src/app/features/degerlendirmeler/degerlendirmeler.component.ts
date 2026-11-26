@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, inject } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit, inject } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { forkJoin } from 'rxjs';
 import { Aday, Degerlendirme, Komite } from '../../core/models/records';
@@ -46,6 +46,7 @@ export class DegerlendirmelerComponent implements OnInit {
   private readonly evaluationApi = inject(DegerlendirmeService);
   private readonly candidateApi = inject(AdayService);
   private readonly committeeApi = inject(KomiteService);
+  private readonly changeDetector = inject(ChangeDetectorRef);
   evaluations: Degerlendirme[] = [];
   candidates: Aday[] = [];
   committees: Komite[] = [];
@@ -59,7 +60,12 @@ export class DegerlendirmelerComponent implements OnInit {
   ngOnInit(): void { this.refresh(); }
   refresh(): void {
     forkJoin({ evaluations: this.evaluationApi.list(), candidates: this.candidateApi.list(), committees: this.committeeApi.list() }).subscribe({
-      next: data => { this.evaluations = data.evaluations; this.candidates = data.candidates; this.committees = data.committees; },
+      next: data => {
+        this.evaluations = data.evaluations;
+        this.candidates = data.candidates;
+        this.committees = data.committees;
+        this.changeDetector.markForCheck();
+      },
       error: error => this.fail(error)
     });
   }
@@ -72,11 +78,22 @@ export class DegerlendirmelerComponent implements OnInit {
     if (this.form.invalid) return;
     const value = this.form.getRawValue();
     this.evaluationApi.create({ komiteId: value.komiteId!, adayId: value.adayId!, tarih: value.tarih!, sonuc: value.sonuc!, olcut: value.olcut! }).subscribe({
-      next: () => { this.form.reset(); this.notice = 'Değerlendirme eklendi.'; this.isError = false; this.refresh(); }, error: error => this.fail(error)
+      next: () => { this.form.reset(); this.succeed('Değerlendirme eklendi.'); this.refresh(); }, error: error => this.fail(error)
     });
   }
   remove(id: number): void {
-    this.evaluationApi.delete(id).subscribe({ next: () => { this.notice = 'Değerlendirme silindi.'; this.isError = false; this.refresh(); }, error: error => this.fail(error) });
+    this.evaluationApi.delete(id).subscribe({
+      next: () => { this.succeed('Değerlendirme silindi.'); this.refresh(); }, error: error => this.fail(error)
+    });
   }
-  private fail(error: unknown): void { this.notice = apiErrorMessage(error); this.isError = true; }
+  private succeed(message: string): void {
+    this.notice = message;
+    this.isError = false;
+    this.changeDetector.markForCheck();
+  }
+  private fail(error: unknown): void {
+    this.notice = apiErrorMessage(error);
+    this.isError = true;
+    this.changeDetector.markForCheck();
+  }
 }

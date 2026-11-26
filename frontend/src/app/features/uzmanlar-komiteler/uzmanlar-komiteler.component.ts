@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, inject } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit, inject } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { forkJoin } from 'rxjs';
 import { Kategori, Komite, Uzman } from '../../core/models/records';
@@ -73,6 +73,7 @@ export class UzmanlarKomitelerComponent implements OnInit {
   private readonly expertApi = inject(UzmanService);
   private readonly committeeApi = inject(KomiteService);
   private readonly categoryApi = inject(KategoriService);
+  private readonly changeDetector = inject(ChangeDetectorRef);
   experts: Uzman[] = [];
   committees: Komite[] = [];
   categories: Kategori[] = [];
@@ -90,7 +91,12 @@ export class UzmanlarKomitelerComponent implements OnInit {
   ngOnInit(): void { this.refresh(); }
   refresh(): void {
     forkJoin({ experts: this.expertApi.list(), committees: this.committeeApi.list(), categories: this.categoryApi.list() }).subscribe({
-      next: data => { this.experts = data.experts; this.committees = data.committees; this.categories = data.categories; },
+      next: data => {
+        this.experts = data.experts;
+        this.committees = data.committees;
+        this.categories = data.categories;
+        this.changeDetector.markForCheck();
+      },
       error: error => this.fail(error)
     });
   }
@@ -133,6 +139,14 @@ export class UzmanlarKomitelerComponent implements OnInit {
       next: () => { this.succeed('Komite üyesi çıkarıldı.'); this.refresh(); }, error: error => this.fail(error)
     });
   }
-  private succeed(message: string): void { this.notice = message; this.isError = false; }
-  private fail(error: unknown): void { this.notice = apiErrorMessage(error); this.isError = true; }
+  private succeed(message: string): void {
+    this.notice = message;
+    this.isError = false;
+    this.changeDetector.markForCheck();
+  }
+  private fail(error: unknown): void {
+    this.notice = apiErrorMessage(error);
+    this.isError = true;
+    this.changeDetector.markForCheck();
+  }
 }

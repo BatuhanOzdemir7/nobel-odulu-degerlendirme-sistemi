@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, inject } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit, inject } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { forkJoin } from 'rxjs';
 import { Kategori, Odul } from '../../core/models/records';
@@ -50,6 +50,7 @@ export class KayitlarComponent implements OnInit {
   private readonly fb = inject(FormBuilder);
   private readonly kategoriApi = inject(KategoriService);
   private readonly odulApi = inject(OdulService);
+  private readonly changeDetector = inject(ChangeDetectorRef);
   categories: Kategori[] = [];
   prizes: Odul[] = [];
   notice = '';
@@ -60,7 +61,11 @@ export class KayitlarComponent implements OnInit {
   ngOnInit(): void { this.refresh(); }
   refresh(): void {
     forkJoin({ categories: this.kategoriApi.list(), prizes: this.odulApi.list() }).subscribe({
-      next: data => { this.categories = data.categories; this.prizes = data.prizes; },
+      next: data => {
+        this.categories = data.categories;
+        this.prizes = data.prizes;
+        this.changeDetector.markForCheck();
+      },
       error: error => this.fail(error)
     });
   }
@@ -84,6 +89,14 @@ export class KayitlarComponent implements OnInit {
   deletePrize(id: number): void {
     this.odulApi.delete(id).subscribe({ next: () => { this.succeed('Ödül silindi.'); this.refresh(); }, error: error => this.fail(error) });
   }
-  private succeed(message: string): void { this.notice = message; this.isError = false; }
-  private fail(error: unknown): void { this.notice = apiErrorMessage(error); this.isError = true; }
+  private succeed(message: string): void {
+    this.notice = message;
+    this.isError = false;
+    this.changeDetector.markForCheck();
+  }
+  private fail(error: unknown): void {
+    this.notice = apiErrorMessage(error);
+    this.isError = true;
+    this.changeDetector.markForCheck();
+  }
 }

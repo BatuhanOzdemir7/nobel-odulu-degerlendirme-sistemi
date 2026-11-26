@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, inject } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit, inject } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { forkJoin } from 'rxjs';
 import { Aday, AdayGosterme, Kurulus, Odul } from '../../core/models/records';
@@ -50,6 +50,7 @@ export class AdayGostermeComponent implements OnInit {
   private readonly organizationApi = inject(KurulusService);
   private readonly candidateApi = inject(AdayService);
   private readonly prizeApi = inject(OdulService);
+  private readonly changeDetector = inject(ChangeDetectorRef);
   nominations: AdayGosterme[] = [];
   organizations: Kurulus[] = [];
   candidates: Aday[] = [];
@@ -67,7 +68,13 @@ export class AdayGostermeComponent implements OnInit {
       nominations: this.nominationApi.list(), organizations: this.organizationApi.list(),
       candidates: this.candidateApi.list(), prizes: this.prizeApi.list()
     }).subscribe({
-      next: data => { this.nominations = data.nominations; this.organizations = data.organizations; this.candidates = data.candidates; this.prizes = data.prizes; },
+      next: data => {
+        this.nominations = data.nominations;
+        this.organizations = data.organizations;
+        this.candidates = data.candidates;
+        this.prizes = data.prizes;
+        this.changeDetector.markForCheck();
+      },
       error: error => this.fail(error)
     });
   }
@@ -81,14 +88,23 @@ export class AdayGostermeComponent implements OnInit {
     if (this.form.invalid) return;
     const value = this.form.getRawValue();
     this.nominationApi.create({ kurulusNo: value.kurulusNo!, adayId: value.adayId!, odulNo: value.odulNo!, tarih: value.tarih!, saat: value.saat! }).subscribe({
-      next: () => { this.form.reset(); this.notice = 'Aday gösterme eklendi.'; this.isError = false; this.refresh(); },
+      next: () => { this.form.reset(); this.succeed('Aday gösterme eklendi.'); this.refresh(); },
       error: error => this.fail(error)
     });
   }
   remove(id: number): void {
     this.nominationApi.delete(id).subscribe({
-      next: () => { this.notice = 'Aday gösterme silindi.'; this.isError = false; this.refresh(); }, error: error => this.fail(error)
+      next: () => { this.succeed('Aday gösterme silindi.'); this.refresh(); }, error: error => this.fail(error)
     });
   }
-  private fail(error: unknown): void { this.notice = apiErrorMessage(error); this.isError = true; }
+  private succeed(message: string): void {
+    this.notice = message;
+    this.isError = false;
+    this.changeDetector.markForCheck();
+  }
+  private fail(error: unknown): void {
+    this.notice = apiErrorMessage(error);
+    this.isError = true;
+    this.changeDetector.markForCheck();
+  }
 }
