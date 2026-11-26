@@ -20,6 +20,8 @@ spring:
     out-of-order: true
 nobel:
   time-zone: Europe/Istanbul
+  evaluation:
+    quorum: 3
   security:
     jwt:
       secret: ${NOBEL_JWT_SECRET:dev-only-secret-change-me-dev-only-secret-change-me}

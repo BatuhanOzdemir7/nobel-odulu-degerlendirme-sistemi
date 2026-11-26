@@ -38,22 +38,33 @@ export const routes: Routes = [
         path: 'degerlendirmeler',
         loadComponent: () => import('./features/degerlendirmeler/degerlendirmeler.component').then(m => m.DegerlendirmelerComponent),
       },
+      {
+        path: 'ayarlar',
+        loadComponent: () => import('./features/admin/settings/admin-settings.component').then(m => m.AdminSettingsComponent),
+      },
     ],
   },
   {
-    path: 'portal/kurulus',
-    canActivate: [authGuard, roleGuard('KURULUS')],
-    loadComponent: () => import('./features/portal/portal-placeholder/portal-placeholder.component').then(m => m.PortalPlaceholderComponent),
-  },
-  {
-    path: 'portal/aday',
-    canActivate: [authGuard, roleGuard('ADAY')],
-    loadComponent: () => import('./features/portal/portal-placeholder/portal-placeholder.component').then(m => m.PortalPlaceholderComponent),
-  },
-  {
-    path: 'portal/uzman',
-    canActivate: [authGuard, roleGuard('UZMAN')],
-    loadComponent: () => import('./features/portal/portal-placeholder/portal-placeholder.component').then(m => m.PortalPlaceholderComponent),
+    path: 'portal',
+    canActivate: [authGuard],
+    loadComponent: () => import('./features/portal/portal-shell/portal-shell.component').then(m => m.PortalShellComponent),
+    children: [
+      {
+        path: 'kurulus',
+        canActivate: [roleGuard('KURULUS')],
+        loadComponent: () => import('./features/portal/kurulus/kurulus-portal.component').then(m => m.KurulusPortalComponent),
+      },
+      {
+        path: 'aday',
+        canActivate: [roleGuard('ADAY')],
+        loadComponent: () => import('./features/portal/aday/aday-portal.component').then(m => m.AdayPortalComponent),
+      },
+      {
+        path: 'uzman',
+        canActivate: [roleGuard('UZMAN')],
+        loadComponent: () => import('./features/portal/uzman/uzman-portal.component').then(m => m.UzmanPortalComponent),
+      },
+    ],
   },
   { path: '**', redirectTo: 'login' },
 ];

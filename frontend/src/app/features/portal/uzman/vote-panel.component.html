@@ -1,0 +1,33 @@
+@let row = candidate();
+<article class="panel stack">
+  <header><h2>{{ row.adayAdi }}</h2><p class="hint">{{ row.calismaAlani }} · {{ row.memberCount }} üye</p></header>
+  <nobel-vote-progress [cast]="row.votesCast" [required]="row.votesRequired" />
+  @if (row.finalized) {
+    <span class="secondary result">Nihai karar: {{ row.degerlendirme?.sonuc }}</span>
+    @if (row.degerlendirme; as result) { <p class="hint">{{ result.tarih }} · {{ result.olcut }}</p> }
+  } @else {
+    @if (row.myVote; as myVote) {
+      <p>Oyunuz: {{ labels[myVote.karar] }} · {{ myVote.olcut }}</p>
+    } @else {
+      <label>Değerlendirme ölçütü
+        <select [formControl]="criterion">
+          <option value="">Ölçüt seçin</option>
+          @for (item of criteria(); track item) { <option [value]="item">{{ item }}</option> }
+        </select>
+      </label>
+      <div class="actions">
+        @for (option of options; track option) {
+          <button type="button" class="secondary" [disabled]="busy() || criterion.invalid" (click)="cast(option)">{{ labels[option] }}</button>
+        }
+      </div>
+    }
+    <button type="button" class="primary" [disabled]="busy() || row.votesCast < row.votesRequired"
+      (click)="finish.emit(row.adayId)">Kararı Kesinleştir</button>
+  }
+  <strong>Komite oyları</strong>
+  <ul class="vote-list">
+    @for (item of row.oylar; track item.oyId) {
+      <li>{{ item.uzmanAdi }} · {{ labels[item.karar] }} · {{ item.olcut }}</li>
+    } @empty { <li>Henüz oy kullanılmadı.</li> }
+  </ul>
+</article>

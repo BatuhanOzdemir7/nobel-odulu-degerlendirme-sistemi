@@ -8,10 +8,10 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class KullaniciSchemaIT extends AuthPostgresIntegration {
     @Test
-    void cleanDatabaseApplies1Then2Then3Then5AndValidatesHibernateMappings() {
+    void cleanDatabaseAppliesMigrationsInVersionOrderAndValidatesHibernateMappings() {
         assertThat(jdbc.queryForList("""
                 SELECT version FROM flyway_schema_history WHERE success ORDER BY installed_rank
-                """, String.class)).containsExactly("1", "2", "3", "5");
+                """, String.class)).containsExactly("1", "2", "3", "4", "5");
         assertThat(jdbc.queryForObject("""
                 SELECT deger FROM sistem_ayari WHERE anahtar = 'GIZLILIK_MODU'
                 """, String.class)).isEqualTo("SEFFAF");

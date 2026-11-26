@@ -6,6 +6,7 @@ import { Rol } from '../models/auth.models';
 import { AuthService } from '../services/auth.service';
 import { authGuard } from './auth.guard';
 import { roleGuard } from './role.guard';
+import { routes } from '../../app.routes';
 
 describe('authentication and role guards', () => {
   const role = signal<Rol | null>(null);
@@ -47,5 +48,16 @@ describe('authentication and role guards', () => {
   it('also redirects a signed-out visit when only the role guard is used', () => {
     const result = TestBed.runInInjectionContext(() => roleGuard('UZMAN')(route, state)) as UrlTree;
     expect(router.serializeUrl(result)).toBe('/login?returnUrl=%2Fadmin');
+  });
+
+  it('protects each portal child route with its own role', () => {
+    role.set('ADAY');
+    const children = routes.find(route => route.path === 'portal')!.children!;
+    for (const child of children) {
+      const guard = child.canActivate![0] as ReturnType<typeof roleGuard>;
+      const result = TestBed.runInInjectionContext(() => guard(route, state));
+      if (child.path === 'aday') expect(result).toBe(true);
+      else expect(router.serializeUrl(result as UrlTree)).toBe('/forbidden');
+    }
   });
 });
