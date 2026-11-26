@@ -1,0 +1,67 @@
+<div #stage class="stage" [attr.data-backdrop]="director.backdrop()"
+     [style.--seat-count]="expertCount()" [style.--stage-gavel-duration]="(900 * director.timeScale()) + 'ms'"
+     [style.--stage-envelope-duration]="(1000 * director.timeScale()) + 'ms'" aria-hidden="true">
+  <div class="stage__wall"></div>
+  <div class="stage__floor"></div>
+  @if (director.backdrop() === 'empty') { <p class="stage__waiting">Olay bekleniyor.</p> }
+
+  @if (director.backdrop() === 'nomination') {
+    <div class="podium" data-ref="prop:podium">
+      <span class="podium__plaque">{{ director.plaque() }}</span>
+      @if (director.envelopeOnPodium()) { <span class="envelope envelope--podium"></span> }
+    </div>
+  }
+  @if (director.backdrop() === 'committee') {
+    <div class="table" data-ref="prop:table">
+      <div class="table__counter">
+        @for (filled of pipSlots(); track $index) { <span class="pip" [class.pip--on]="filled"></span> }
+        <span class="table__count">{{ director.pips().cast }}/{{ director.pips().required }}</span>
+      </div>
+    </div>
+    @for (a of director.actors(); track a.id) {
+      @if (a.tableCard) { <span class="table-card" [style.left.%]="a.x" [attr.data-variant]="a.tableCard"></span> }
+    }
+  }
+
+  @for (a of director.actors(); track a.id) {
+    <div class="actor" [attr.data-actor-id]="a.id" [attr.data-role]="a.role"
+         [attr.data-seated]="a.role === 'UZMAN' && a.y === seatY && a.z < 50 ? 'true' : null"
+         [style.left.%]="a.x" [style.top.%]="a.y" [style.z-index]="a.z"
+         [style.--scale]="a.scale" [style.--move-ms]="a.moveMs + 'ms'">
+      <div class="actor__body" [class.actor__body--hop]="a.hopping">
+        <app-character-rig class="actor__rig" [config]="a.config" [activity]="a.activity" [emote]="a.emote" [interactive]="false"
+                           [gazeTarget]="a.gazeTarget" [startleRevision]="a.startleRevision"
+                           [talkRevision]="a.talkRevision" [label]="a.label" />
+        @for (p of a.props; track p.kind) {
+          <span class="prop" [attr.data-prop]="p.kind" [attr.data-variant]="p.variant ?? null">
+            @if (p.kind === 'vote-card') { <b>{{ p.variant === 'KABUL' ? '✓' : p.variant === 'RED' ? '✗' : '?' }}</b> }
+            @if (p.kind === 'shield') { <b>≥3</b> }
+          </span>
+        }
+        @if (a.bubble) { <div class="bubble">{{ a.bubble }}</div> }
+      </div>
+      <div class="nameplate">{{ a.label }}</div>
+    </div>
+  }
+
+  @for (f of flights(); track f.rev) {
+    <span class="envelope envelope--fly" [style.--fx]="f.from.x" [style.--fy]="f.from.y" [style.--tx]="f.to.x" [style.--ty]="f.to.y"></span>
+  }
+  @for (c of confettiPieces(); track c.id) {
+    <span class="confetti" [style.--left]="c.left" [style.--hue]="c.hue" [style.--delay]="c.delay + 'ms'"></span>
+  }
+  @for (n of flashes(); track n) { <div class="flash"></div> }
+</div>
+@if (director.banner(); as b) {
+  <div class="banner" [attr.data-tone]="b.tone" aria-hidden="true">
+    <strong>{{ b.text }}</strong>@if (b.sub) { <span>{{ b.sub }}</span> }
+  </div>
+}
+<p class="sr-only" aria-live="polite">{{ director.banner()?.text }} {{ director.banner()?.sub }}</p>
+@if (demoFixtures.length) {
+  <div class="demo-controls" role="group" aria-label="Komite sahnesi demo seçenekleri">
+    @for (fixture of demoFixtures; track fixture.label) {
+      <button type="button" (click)="playDemo(fixture)">{{ fixture.label }}</button>
+    }
+  </div>
+}
