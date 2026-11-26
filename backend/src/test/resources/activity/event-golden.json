@@ -1,0 +1,281 @@
+[
+  {
+    "eventId": "evt-1",
+    "timestamp": "2026-11-21T14:32:10",
+    "action": "NOMINATION_CREATED",
+    "actorRole": "KURULUS",
+    "actorLabel": "CERN",
+    "sqlSummary": "INSERT INTO aday_gosterme (kurulus_no=1, aday_id=4, odul_no=2) · INSERT INTO kullanici (kullanici_adi='aday_4', rol='ADAY')",
+    "erHighlight": {
+      "nodes": [
+        "KURULUS",
+        "aday_gosterir",
+        "ADAY",
+        "ODUL"
+      ],
+      "edges": [
+        "KURULUS-aday_gosterir",
+        "aday_gosterir-ADAY",
+        "aday_gosterir-ODUL"
+      ],
+      "severity": "success"
+    },
+    "stageCue": {
+      "scene": "NOMINATION",
+      "organizationLabel": "CERN",
+      "candidateName": "Dr. Selin Arslan",
+      "awardLabel": "Nobel Fizik Ödülü",
+      "categoryLabel": "Fizik",
+      "newAccount": true
+    }
+  },
+  {
+    "eventId": "evt-2",
+    "timestamp": "2026-11-21T14:32:10",
+    "action": "EXPERT_VOTED",
+    "actorRole": "UZMAN",
+    "actorLabel": "Prof. Dr. İlker Kaya",
+    "sqlSummary": "INSERT INTO uzman_oyu (komite_id=1, uzman_id=2, aday_id=4, karar='KABUL')",
+    "erHighlight": {
+      "nodes": [
+        "UZMAN",
+        "uyesidir",
+        "DEGERLENDIRME_KOMITESI",
+        "degerlendirir",
+        "ADAY"
+      ],
+      "edges": [
+        "DEGERLENDIRME_KOMITESI-degerlendirir",
+        "degerlendirir-ADAY",
+        "UZMAN-uyesidir",
+        "uyesidir-DEGERLENDIRME_KOMITESI"
+      ],
+      "severity": "success"
+    },
+    "stageCue": {
+      "scene": "COMMITTEE_VOTE",
+      "committeeId": 1,
+      "committeeLabel": "Fizik Komitesi",
+      "members": [
+        {
+          "expertId": 2,
+          "label": "Prof. Dr. İlker Kaya"
+        }
+      ],
+      "candidateName": "Dr. Selin Arslan",
+      "expertId": 2,
+      "expertLabel": "Prof. Dr. İlker Kaya",
+      "vote": "KABUL",
+      "votesCast": 3,
+      "votesRequired": 3,
+      "votes": [
+        {
+          "expertId": 2,
+          "vote": "KABUL"
+        }
+      ]
+    }
+  },
+  {
+    "eventId": "evt-3",
+    "timestamp": "2026-11-21T14:32:10",
+    "action": "DECISION_FINALIZED",
+    "actorRole": "SYSTEM",
+    "actorLabel": "Sistem",
+    "sqlSummary": "INSERT INTO degerlendirme (komite_id=1, aday_id=4, sonuc='INCELEMEDE')",
+    "erHighlight": {
+      "nodes": [
+        "DEGERLENDIRME_KOMITESI",
+        "degerlendirir",
+        "ADAY"
+      ],
+      "edges": [
+        "DEGERLENDIRME_KOMITESI-degerlendirir",
+        "degerlendirir-ADAY"
+      ],
+      "severity": "success"
+    },
+    "stageCue": {
+      "scene": "DECISION_FINALIZED",
+      "committeeId": 1,
+      "committeeLabel": "Fizik Komitesi",
+      "members": [
+        {
+          "expertId": 2,
+          "label": "Prof. Dr. İlker Kaya"
+        }
+      ],
+      "candidateName": "Dr. Selin Arslan",
+      "result": "INCELEMEDE",
+      "tally": {
+        "kabul": 1,
+        "red": 1,
+        "incelemede": 1
+      }
+    }
+  },
+  {
+    "eventId": "evt-4",
+    "timestamp": "2026-11-21T14:32:10",
+    "action": "REGISTRY_CREATED",
+    "actorRole": "ADMIN",
+    "actorLabel": "Yönetici",
+    "sqlSummary": "INSERT INTO odul (odul_no=2)",
+    "erHighlight": {
+      "nodes": [
+        "ODUL"
+      ],
+      "edges": [],
+      "severity": "success"
+    }
+  },
+  {
+    "eventId": "evt-5",
+    "timestamp": "2026-11-21T14:32:10",
+    "action": "REGISTRY_UPDATED",
+    "actorRole": "ADMIN",
+    "actorLabel": "Yönetici",
+    "sqlSummary": "UPDATE aday WHERE aday_id=4",
+    "erHighlight": {
+      "nodes": [
+        "ADAY"
+      ],
+      "edges": [],
+      "severity": "success"
+    }
+  },
+  {
+    "eventId": "evt-6",
+    "timestamp": "2026-11-21T14:32:10",
+    "action": "REGISTRY_DELETED",
+    "actorRole": "ADMIN",
+    "actorLabel": "Yönetici",
+    "sqlSummary": "DELETE FROM degerlendirme WHERE degerlendirme_id=5",
+    "erHighlight": {
+      "nodes": [
+        "DEGERLENDIRME_KOMITESI",
+        "degerlendirir",
+        "ADAY"
+      ],
+      "edges": [
+        "DEGERLENDIRME_KOMITESI-degerlendirir",
+        "degerlendirir-ADAY"
+      ],
+      "severity": "info"
+    }
+  },
+  {
+    "eventId": "evt-7",
+    "timestamp": "2026-11-21T14:32:10",
+    "action": "COMMITTEE_CREATED",
+    "actorRole": "ADMIN",
+    "actorLabel": "Yönetici",
+    "sqlSummary": "INSERT INTO degerlendirme_komitesi (komite_id=1)",
+    "erHighlight": {
+      "nodes": [
+        "KATEGORI",
+        "olusturulur",
+        "DEGERLENDIRME_KOMITESI"
+      ],
+      "edges": [
+        "KATEGORI-olusturulur",
+        "olusturulur-DEGERLENDIRME_KOMITESI"
+      ],
+      "severity": "success"
+    }
+  },
+  {
+    "eventId": "evt-8",
+    "timestamp": "2026-11-21T14:32:10",
+    "action": "COMMITTEE_DELETED",
+    "actorRole": "ADMIN",
+    "actorLabel": "Yönetici",
+    "sqlSummary": "DELETE FROM degerlendirme_komitesi WHERE komite_id=1",
+    "erHighlight": {
+      "nodes": [
+        "KATEGORI",
+        "olusturulur",
+        "DEGERLENDIRME_KOMITESI"
+      ],
+      "edges": [
+        "KATEGORI-olusturulur",
+        "olusturulur-DEGERLENDIRME_KOMITESI"
+      ],
+      "severity": "info"
+    }
+  },
+  {
+    "eventId": "evt-9",
+    "timestamp": "2026-11-21T14:32:10",
+    "action": "COMMITTEE_MEMBER_ADDED",
+    "actorRole": "ADMIN",
+    "actorLabel": "Yönetici",
+    "sqlSummary": "INSERT INTO komite_uyesi (komite_id=1, uzman_id=2)",
+    "erHighlight": {
+      "nodes": [
+        "UZMAN",
+        "uyesidir",
+        "DEGERLENDIRME_KOMITESI"
+      ],
+      "edges": [
+        "UZMAN-uyesidir",
+        "uyesidir-DEGERLENDIRME_KOMITESI"
+      ],
+      "severity": "success"
+    }
+  },
+  {
+    "eventId": "evt-10",
+    "timestamp": "2026-11-21T14:32:10",
+    "action": "COMMITTEE_MEMBER_REMOVED",
+    "actorRole": "ADMIN",
+    "actorLabel": "Yönetici",
+    "sqlSummary": "DELETE FROM komite_uyesi WHERE komite_id=1 AND uzman_id=2",
+    "erHighlight": {
+      "nodes": [
+        "UZMAN",
+        "uyesidir",
+        "DEGERLENDIRME_KOMITESI"
+      ],
+      "edges": [
+        "UZMAN-uyesidir",
+        "uyesidir-DEGERLENDIRME_KOMITESI"
+      ],
+      "severity": "info"
+    }
+  },
+  {
+    "eventId": "evt-11",
+    "timestamp": "2026-11-21T14:32:10",
+    "action": "CONSTRAINT_VIOLATION",
+    "actorRole": "SYSTEM",
+    "actorLabel": "Yönetici",
+    "sqlSummary": "PostgreSQL [23514] · PostgreSQL Trigger: En az 3 uzman gerekli!",
+    "erHighlight": {
+      "nodes": [
+        "UZMAN",
+        "uyesidir",
+        "DEGERLENDIRME_KOMITESI"
+      ],
+      "edges": [
+        "UZMAN-uyesidir",
+        "uyesidir-DEGERLENDIRME_KOMITESI"
+      ],
+      "severity": "error"
+    },
+    "stageCue": {
+      "scene": "CONSTRAINT_ERROR",
+      "committeeId": 1,
+      "committeeLabel": "Fizik Komitesi",
+      "members": [
+        {
+          "expertId": 2,
+          "label": "Prof. Dr. İlker Kaya"
+        }
+      ],
+      "expertLabel": "İlker",
+      "memberCount": 1,
+      "message": "PostgreSQL Trigger: En az 3 uzman gerekli!"
+    }
+  }
+]

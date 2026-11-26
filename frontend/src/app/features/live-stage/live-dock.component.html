@@ -1,0 +1,27 @@
+<aside class="dock" aria-label="Canlı akış">
+  @if (open()) {
+    <section class="drawer" id="live-dock-drawer">
+      <header>
+        <h2>Canlı akış</h2>
+        <a routerLink="/live-stage">Tam ekran sahne</a>
+      </header>
+      <app-er-live-map [compact]="true" [highlight]="presenter.current()?.erHighlight ?? null" />
+      @if (last(); as event) {
+        <code class="last" [class.error]="event.erHighlight.severity === 'error'"
+          [attr.title]="event.sqlSummary">{{ event.sqlSummary }}</code>
+      } @else {
+        <span class="last">Henüz olay yok.</span>
+      }
+      <label><input type="checkbox" [checked]="showStage()" (change)="showStage.set($event.target.checked)">
+        Sahneyi göster
+      </label>
+      @if (showStage()) {
+        <app-character-stage />
+      }
+    </section>
+  }
+  <button class="toggle" type="button" [attr.aria-expanded]="open()"
+    [attr.aria-controls]="open() ? 'live-dock-drawer' : null" (click)="toggle()">
+    {{ open() ? 'Canlı akışı kapat' : 'Canlı akışı aç' }}
+  </button>
+</aside>

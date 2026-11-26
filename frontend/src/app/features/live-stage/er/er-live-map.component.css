@@ -1,0 +1,43 @@
+:host {
+  display: block;
+  --er-gold: #f3d99b;
+  --er-red: #ff857b;
+  --er-stroke: #567d75;
+  --er-fill: #103c39;
+}
+
+svg { display: block; width: 100%; height: auto; overflow: visible; }
+.edge { stroke: var(--er-stroke); stroke-width: 2.25; opacity: .7; }
+.node { transform-box: fill-box; transform-origin: center; transition: transform 160ms ease; }
+.node :is(rect, polygon) { fill: var(--er-fill); stroke: var(--er-stroke); stroke-width: 2; }
+.node.relationship polygon { fill: #183230; }
+text { fill: #d2e3de; font-size: 15px; font-weight: 700; }
+.relationship text { font-size: 13px; font-weight: 600; }
+
+.node-active {
+  transform: scale(1.045);
+  filter: drop-shadow(0 0 7px var(--er-accent, var(--er-gold)));
+}
+.node-active :is(rect, polygon) { stroke: var(--er-accent, var(--er-gold)); stroke-width: 3; }
+.node-active text { fill: var(--er-accent, var(--er-gold)); }
+.node-error { --er-accent: var(--er-red); animation: er-shake 420ms ease-in-out infinite; }
+.edge-active {
+  opacity: 1;
+  stroke: var(--er-gold);
+  stroke-width: 3;
+  stroke-dasharray: 8 6;
+  animation: er-flow 680ms linear infinite;
+}
+.edge-error { stroke: var(--er-red); }
+
+.compact text { font-size: 16px; }
+.compact .relationship text { font-size: 14px; }
+@keyframes er-flow { to { stroke-dashoffset: -28; } }
+@keyframes er-shake {
+  0%, 100% { transform: translateX(0) scale(1.045); }
+  25% { transform: translateX(-3px) scale(1.045); }
+  75% { transform: translateX(3px) scale(1.045); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .node, .node-error, .edge-active { animation: none; transition: none; }
+}

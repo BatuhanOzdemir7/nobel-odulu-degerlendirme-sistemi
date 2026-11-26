@@ -2,6 +2,7 @@ package tr.edu.nobel.exception;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolationException;
+import org.hibernate.JDBCException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -24,9 +25,11 @@ import java.util.Map;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
     private final ApiErrorFactory errors;
+    private final ConstraintActivityReporter activity;
 
-    public GlobalExceptionHandler(ApiErrorFactory errors) {
+    public GlobalExceptionHandler(ApiErrorFactory errors, ConstraintActivityReporter activity) {
         this.errors = errors;
+        this.activity = activity;
     }
 
     @ExceptionHandler(AccessDeniedException.class)
@@ -58,7 +61,17 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler({DataIntegrityViolationException.class, ConstraintViolationException.class, TransactionSystemException.class})
     public ResponseEntity<ApiError> integrity(RuntimeException ex, HttpServletRequest request) {
+        if (ex instanceof DataIntegrityViolationException || ex instanceof TransactionSystemException) {
+            activity.report(ex, request);
+        }
         return error(HttpStatus.CONFLICT, databaseMessage(ex), request, Map.of());
+    }
+
+    @ExceptionHandler(JDBCException.class)
+    public void untranslatedDatabaseError(JDBCException ex, HttpServletRequest request) {
+        // Direct EntityManager flushes can bypass Spring's exception translation.
+        activity.report(ex, request);
+        throw ex;
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)

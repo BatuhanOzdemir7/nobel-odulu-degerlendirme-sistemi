@@ -1,11 +1,12 @@
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { Router, RouterLink, RouterOutlet } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
+import { LiveDockComponent } from '../../live-stage/live-dock.component';
 
 @Component({
   standalone: true,
   selector: 'nobel-portal-shell',
-  imports: [RouterLink, RouterOutlet],
+  imports: [RouterLink, RouterOutlet, LiveDockComponent],
   templateUrl: './portal-shell.component.html',
   styleUrl: './portal-shell.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,

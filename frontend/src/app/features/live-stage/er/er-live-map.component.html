@@ -1,0 +1,21 @@
+<svg viewBox="0 0 1100 600" role="img" [attr.aria-label]="accessibleLabel()" [class.compact]="compact()">
+  @for (edge of edges; track edge.id) {
+    <line class="edge" [attr.data-er-edge]="edge.id"
+      [attr.x1]="edge.start.x" [attr.y1]="edge.start.y" [attr.x2]="edge.end.x" [attr.y2]="edge.end.y"
+      [class.edge-active]="activeEdges().has(edge.id)" [class.edge-error]="error() && activeEdges().has(edge.id)" />
+  }
+  @for (node of nodes; track node.id) {
+    <g class="node" [class.relationship]="node.kind === 'relationship'" [attr.data-er-node]="node.id"
+      [class.node-active]="activeNodes().has(node.id)" [class.node-error]="error() && activeNodes().has(node.id)">
+      @if (node.kind === 'entity') {
+        <rect [attr.x]="node.cx - node.w / 2" [attr.y]="node.cy - node.h / 2"
+          [attr.width]="node.w" [attr.height]="node.h" rx="10" />
+      } @else {
+        <polygon [attr.points]="node.cx + ',' + (node.cy - node.h / 2) + ' ' +
+          (node.cx + node.w / 2) + ',' + node.cy + ' ' + node.cx + ',' + (node.cy + node.h / 2) + ' ' +
+          (node.cx - node.w / 2) + ',' + node.cy" />
+      }
+      <text [attr.x]="node.cx" [attr.y]="node.cy" text-anchor="middle" dominant-baseline="central">{{ node.label }}</text>
+    </g>
+  }
+</svg>

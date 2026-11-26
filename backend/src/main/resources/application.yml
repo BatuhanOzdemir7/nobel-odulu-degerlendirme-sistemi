@@ -20,6 +20,9 @@ spring:
     out-of-order: true
 nobel:
   time-zone: Europe/Istanbul
+  events:
+    buffer-size: 50
+    heartbeat-seconds: 15
   evaluation:
     quorum: 3
   security:
