@@ -1,8 +1,12 @@
+import { HttpErrorResponse } from '@angular/common/http';
 import { ChangeDetectionStrategy, Component, computed, DestroyRef, inject, isDevMode, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { catchError, concat, debounceTime, EMPTY, filter, finalize, fromEvent, merge, Observable, of, switchMap } from 'rxjs';
+import {
+  catchError, concat, debounceTime, EMPTY, filter, finalize, fromEvent, merge, Observable, of,
+  retry, switchMap, tap, throwError, timer,
+} from 'rxjs';
 import type { ActivityAction } from '../../../core/events/activity-event.model';
 import { ActivityStreamService } from '../../../core/events/activity-stream.service';
 import { DemoAccount, LoginResponse, Rol } from '../../../core/models/auth.models';
@@ -41,6 +45,7 @@ export class LoginComponent {
   });
   protected readonly loading = signal(false);
   protected readonly error = signal('');
+  protected readonly demoDisconnected = signal(false);
   protected readonly expired = this.route.snapshot.queryParamMap.get('reason') === 'expired';
   protected readonly demoEnabled = computed(() => this.accounts() !== null);
   protected readonly demoGroups = computed(() => {
@@ -58,11 +63,10 @@ export class LoginComponent {
       fromEvent(window, 'focus'),
     ).pipe(
       debounceTime(80),
-      switchMap(() => this.auth.demoAccounts().pipe(catchError(() => EMPTY))),
+      switchMap(() => this.loadDemoAccounts()),
     );
-    this.auth.demoAccounts().pipe(
+    this.loadDemoAccounts().pipe(
       switchMap(accounts => concat(of(accounts), refresh)),
-      catchError(() => EMPTY),
       takeUntilDestroyed(this.destroyRef),
     ).subscribe(accounts => this.accounts.set(accounts));
   }
@@ -75,6 +79,25 @@ export class LoginComponent {
   protected submitDemo(account: DemoAccount): void {
     if (this.loading()) return;
     this.openSession(this.auth.loginDemo(account), '');
+  }
+
+  private loadDemoAccounts(): Observable<DemoAccount[]> {
+    return this.auth.demoAccounts().pipe(
+      tap(() => this.demoDisconnected.set(false)),
+      retry({ delay: (error: unknown) => {
+        if (!(error instanceof HttpErrorResponse) || (error.status !== 0 && error.status < 500)) {
+          return throwError(() => error);
+        }
+        this.accounts.set(null);
+        this.demoDisconnected.set(true);
+        return timer(3000);
+      } }),
+      catchError(() => {
+        this.accounts.set(null);
+        this.demoDisconnected.set(false);
+        return EMPTY;
+      }),
+    );
   }
 
   private openSession(login: Observable<LoginResponse>, returnUrl: string): void {
