@@ -1,0 +1,70 @@
+<main class="scenario-page">
+  <header class="page-header">
+    <nav aria-label="Sahne menüsü">
+      <a routerLink="/live-stage">Canlı Sahne</a>
+      <a routerLink="/dinamik-senaryolar" aria-current="page">Dinamik Senaryolar</a>
+    </nav>
+    <a class="back-link" [routerLink]="home()">{{ home() === '/login' ? 'Giriş ekranına dön' : 'Panele dön' }}</a>
+  </header>
+
+  <h1>Dinamik Senaryolar</h1>
+  <section class="picker" aria-labelledby="scenario-heading">
+    <h2 id="scenario-heading">Bir senaryo seç</h2>
+    <p class="intro">Örnek adaylıklar ve her oynatmada yeniden üretilen komite oyları.</p>
+    <div class="scenario-options">
+      @for (scenario of scenarios; track scenario.id) {
+        <button class="scenario-option" type="button" [attr.aria-pressed]="selected()?.id === scenario.id"
+                [disabled]="running()" (click)="play(scenario)">
+          <span class="category">{{ scenario.category }}</span>
+          <strong>{{ scenario.organization }}</strong>
+          <span>{{ scenario.candidate }}</span>
+        </button>
+      }
+    </div>
+  </section>
+
+  @if (selected(); as scenario) {
+    <div class="playback-header">
+      <h2>{{ scenario.award }}</h2>
+      <div class="controls">
+        <p role="status">
+          @if (running()) { Adım {{ index() + 1 }} / {{ steps().length }} }
+          @else { Senaryo tamamlandı }
+        </p>
+        <button class="replay" type="button" [disabled]="running()" (click)="play(scenario)">Yeniden oynat</button>
+      </div>
+    </div>
+  }
+
+  <div class="stage-grid">
+    <section class="surface map-panel" aria-labelledby="scenario-er-heading">
+      <h2 id="scenario-er-heading">ER Diyagramı</h2>
+      <div class="map-scroll">
+        @for (step of activeStepList(); track step.command.eventId) {
+          <app-er-live-map [highlight]="step.highlight" />
+        } @empty {
+          <app-er-live-map />
+        }
+      </div>
+    </section>
+    <section class="surface stage-panel" aria-labelledby="scenario-stage-heading">
+      <h2 id="scenario-stage-heading">Karakter Sahnesi</h2>
+      <app-nobel-stage [liveControls]="false" />
+    </section>
+  </div>
+
+  @if (activeStep(); as step) {
+    <section class="surface activity" aria-labelledby="scenario-activity-heading">
+      <h2 id="scenario-activity-heading">İşlem akışı</h2>
+      <ol class="steps">
+        @for (item of steps(); track item.command.eventId; let position = $index) {
+          <li [attr.aria-current]="position === index() ? 'step' : null" [class.waiting]="position > index()">
+            <strong>{{ position > index() && $last ? 'Komite kararı' : item.title }}</strong>
+            @if (position <= index()) { <span>{{ item.detail }}</span> }
+          </li>
+        }
+      </ol>
+      <code class="sql" aria-label="Etkin işlemin SQL karşılığı">{{ step.sql }}</code>
+    </section>
+  }
+</main>

@@ -63,9 +63,9 @@
   </div>
 }
 <p class="sr-only" aria-live="polite">{{ director.banner()?.text }} {{ director.banner()?.sub }}</p>
-@if (demoFixtures.length) {
+@if (demoFixtures().length) {
   <div class="demo-controls" role="group" aria-label="Komite sahnesi demo seçenekleri">
-    @for (fixture of demoFixtures; track fixture.label) {
+    @for (fixture of demoFixtures(); track fixture.label) {
       <button type="button" (click)="playDemo(fixture)">{{ fixture.label }}</button>
     }
   </div>

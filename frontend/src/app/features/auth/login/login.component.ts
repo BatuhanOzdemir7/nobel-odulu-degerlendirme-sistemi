@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, DestroyRef, inject, isDevMode, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { catchError, concat, debounceTime, EMPTY, filter, finalize, fromEvent, merge, Observable, of, switchMap } from 'rxjs';
 import type { ActivityAction } from '../../../core/events/activity-event.model';
 import { ActivityStreamService } from '../../../core/events/activity-stream.service';
@@ -23,7 +23,7 @@ const ACCOUNT_CHANGES = new Set<ActivityAction>([
 @Component({
   selector: 'nobel-login',
   standalone: true,
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, RouterLink],
   templateUrl: './login.component.html',
   styleUrl: './login.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,

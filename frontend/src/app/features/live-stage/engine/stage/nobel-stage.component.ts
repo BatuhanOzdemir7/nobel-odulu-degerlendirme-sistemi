@@ -1,6 +1,6 @@
 import { DOCUMENT } from '@angular/common';
 import {
-  afterNextRender, ChangeDetectionStrategy, Component, computed, effect, ElementRef, inject, isDevMode, OnDestroy,
+  afterNextRender, ChangeDetectionStrategy, Component, computed, effect, ElementRef, inject, input, isDevMode, OnDestroy,
   signal, untracked, viewChild,
 } from '@angular/core';
 import { ActivityStreamService, stageCommandFor } from '../../../../core/events/activity-stream.service';
@@ -24,10 +24,12 @@ export class NobelStageComponent implements StageHost, OnDestroy {
   private readonly view = inject(DOCUMENT).defaultView;
   private readonly motionQuery = this.view?.matchMedia?.('(prefers-reduced-motion: reduce)');
   private readonly reduced = signal(this.motionQuery?.matches ?? false);
-  readonly demoFixtures = isDevMode() && new URLSearchParams(this.view?.location.search).get('demo') === '1'
-    ? stageDemoFixtures() : [];
+  readonly liveControls = input(true);
+  private readonly demoRequested = isDevMode() && new URLSearchParams(this.view?.location.search).get('demo') === '1';
+  protected readonly demoFixtures = computed(() => this.liveControls() && this.demoRequested ? stageDemoFixtures() : []);
   private readonly stream = inject(ActivityStreamService);
   protected readonly latestCommand = computed(() => {
+    if (!this.liveControls()) return undefined;
     const recent = this.stream.recent();
     for (let index = recent.length - 1; index >= 0; index--) {
       const command = stageCommandFor(recent[index]);
@@ -63,7 +65,7 @@ export class NobelStageComponent implements StageHost, OnDestroy {
 
   constructor() {
     effect(() => {
-      if (this.hasPlayed || this.demoFixtures.length) return;
+      if (this.hasPlayed || this.demoFixtures().length) return;
       const command = this.latestCommand();
       if (command) untracked(() => this.playHistory(command));
     });

@@ -1,2 +1,4 @@
 .session { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; }
 .role { border: 1px solid #80aaa2; border-radius: 99px; padding: 4px 10px; font-size: .8rem; }
+.scenarios-link { display: inline-block; border-radius: 7px; padding: 9px 12px; color: #e3efea; text-decoration: none; }
+.scenarios-link:hover { background: #235a52; color: white; }

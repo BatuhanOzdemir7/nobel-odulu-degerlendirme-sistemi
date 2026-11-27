@@ -5,6 +5,10 @@
       {{ statusLabel(stream.status()) }}
     </span>
   </header>
+  <nav class="stage-nav" aria-label="Sahne menüsü">
+    <a routerLink="/live-stage" aria-current="page">Canlı Sahne</a>
+    <a routerLink="/dinamik-senaryolar">Dinamik Senaryolar</a>
+  </nav>
   <div class="stage-grid">
     <section class="surface map-panel" aria-labelledby="er-heading">
       <h2 id="er-heading">ER Diyagramı</h2>

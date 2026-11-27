@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, DestroyRef, inject, isDevMode } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { activityStatusLabel, ActivityStreamService } from '../../core/events/activity-stream.service';
 import { createDemoEvent, DEMO_FIXTURES } from '../../core/events/demo-fixtures';
 import { ErPresenterService } from '../../core/events/er-presenter.service';
@@ -10,7 +10,7 @@ import { CharacterStageComponent } from './stage/character-stage.component';
 
 @Component({
   selector: 'app-live-stage',
-  imports: [ErLiveMapComponent, CharacterStageComponent, SqlRibbonComponent],
+  imports: [RouterLink, ErLiveMapComponent, CharacterStageComponent, SqlRibbonComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './live-stage.component.html',
   styleUrl: './live-stage.component.css',

@@ -1,5 +1,8 @@
 <header class="topbar">
   <a class="brand" [routerLink]="home()">Nobel <span>Değerlendirme Sistemi</span></a>
+  <nav aria-label="Ana menü">
+    <a class="scenarios-link" routerLink="/dinamik-senaryolar">Dinamik Senaryolar</a>
+  </nav>
   @if (auth.user(); as user) {
     <div class="session">
       @switch (user.rol) {

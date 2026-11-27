@@ -17,6 +17,10 @@ export const routes: Routes = [
     loadComponent: () => import('./features/live-stage/live-stage.component').then(m => m.LiveStageComponent),
   },
   {
+    path: 'dinamik-senaryolar',
+    loadComponent: () => import('./features/scenarios/scenarios.component').then(m => m.ScenariosComponent),
+  },
+  {
     path: 'admin',
     canActivate: [authGuard, roleGuard('ADMIN')],
     loadComponent: () => import('./features/admin/admin-shell/admin-shell.component').then(m => m.AdminShellComponent),
