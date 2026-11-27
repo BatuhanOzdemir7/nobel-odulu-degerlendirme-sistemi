@@ -10,6 +10,7 @@ import {
 import type { ActivityAction } from '../../../core/events/activity-event.model';
 import { ActivityStreamService } from '../../../core/events/activity-stream.service';
 import { DemoAccount, LoginResponse, Rol } from '../../../core/models/auth.models';
+import { SAME_ORIGIN_API } from '../../../core/services/api-mode';
 import { AuthService } from '../../../core/services/auth.service';
 import { apiErrorMessage } from '../../../shared/api-error';
 
@@ -56,7 +57,7 @@ export class LoginComponent {
   });
 
   constructor() {
-    if (!isDevMode()) return;
+    if (!isDevMode() && !SAME_ORIGIN_API) return;
     const activity = inject(ActivityStreamService);
     const refresh = merge(
       activity.events$.pipe(filter(event => ACCOUNT_CHANGES.has(event.action))),

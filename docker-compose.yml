@@ -1,14 +1,13 @@
 services:
   postgres:
     image: postgres:16-alpine
-    container_name: nobel-postgres
     restart: unless-stopped
     environment:
       POSTGRES_DB: nobel_db
       POSTGRES_USER: nobel_user
       POSTGRES_PASSWORD: nobel_password
     ports:
-      - "5432:5432"
+      - "127.0.0.1:${NOBEL_DB_PORT:-0}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -17,6 +16,41 @@ services:
       timeout: 5s
       retries: 10
       start_period: 10s
+
+  backend:
+    build: ./backend
+    restart: unless-stopped
+    environment:
+      DB_URL: jdbc:postgresql://postgres:5432/nobel_db
+      SERVER_ADDRESS: 127.0.0.1
+      NOBEL_LOCAL_DEMO_LOGIN: "${NOBEL_LOCAL_DEMO_LOGIN:-true}"
+      NOBEL_LOCAL_DEMO_PORT: "${NOBEL_APP_PORT:-4200}"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    # Nginx shares this network namespace so Spring can stay on loopback.
+    ports:
+      - "127.0.0.1:${NOBEL_APP_PORT:-4200}:80"
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8080/api/events/recent"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+      start_period: 30s
+
+  frontend:
+    build: ./frontend
+    restart: unless-stopped
+    network_mode: service:backend
+    depends_on:
+      backend:
+        condition: service_healthy
+        restart: true
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1/login"]
+      interval: 5s
+      timeout: 3s
+      retries: 6
 
 volumes:
   postgres_data:

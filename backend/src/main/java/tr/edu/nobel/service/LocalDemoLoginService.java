@@ -1,6 +1,7 @@
 package tr.edu.nobel.service;
 
 import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.web.ServerProperties;
 import org.springframework.http.HttpHeaders;
@@ -33,7 +34,6 @@ import java.util.UUID;
 @Transactional(readOnly = true)
 public class LocalDemoLoginService {
     private static final String TOKEN_PREFIX = "local-demo-";
-    private static final String DEMO_ORIGIN = "http://localhost:4200";
     private static final Set<String> LOOPBACK = Set.of("127.0.0.1", "::1", "0:0:0:0:0:0:0:1");
     private static final Duration SESSION_DURATION = Duration.ofHours(1);
     private static final int MAX_SESSIONS = 512;
@@ -59,10 +59,12 @@ public class LocalDemoLoginService {
     private final AccountLabelService labels;
     private final AuthUserMapper mapper;
     private final Clock clock;
+    private final String demoOrigin;
     private final Map<String, DemoSession> sessions = new LinkedHashMap<>();
 
     public LocalDemoLoginService(JdbcTemplate jdbc, AccountLabelService labels, AuthUserMapper mapper,
-                                  Clock clock, ServerProperties server) {
+                                  Clock clock, ServerProperties server,
+                                  @Value("${nobel.security.local-demo-port}") int demoPort) {
         if (server.getAddress() == null || !server.getAddress().isLoopbackAddress()) {
             throw new IllegalStateException("Yerel demo girişi için server.address bir loopback adresi olmalıdır.");
         }
@@ -70,6 +72,7 @@ public class LocalDemoLoginService {
         this.labels = labels;
         this.mapper = mapper;
         this.clock = clock;
+        this.demoOrigin = "http://localhost:" + demoPort;
     }
 
     public List<DemoAccountResponse> list(HttpServletRequest request) {
@@ -128,14 +131,14 @@ public class LocalDemoLoginService {
         return Rol.valueOf(row.getString("role"));
     }
 
-    private static void requireLocalBrowser(HttpServletRequest request) {
+    private void requireLocalBrowser(HttpServletRequest request) {
         if (!isLocalBrowser(request)) throw new AccessDeniedException("Demo girişi yalnızca yerel arayüzde kullanılabilir.");
     }
 
-    private static boolean isLocalBrowser(HttpServletRequest request) {
+    private boolean isLocalBrowser(HttpServletRequest request) {
         return LOOPBACK.contains(request.getRemoteAddr())
                 && "localhost".equalsIgnoreCase(request.getServerName())
-                && DEMO_ORIGIN.equals(request.getHeader(HttpHeaders.ORIGIN));
+                && demoOrigin.equals(request.getHeader(HttpHeaders.ORIGIN));
     }
 
     private record DemoSession(Rol role, long id, Instant expiresAt) { }

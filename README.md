@@ -4,6 +4,8 @@
 
 Bu proje, bir Nobel Ödülü adaylığının kuruluş tarafından önerilmesinden uzmanların oylarıyla komite kararının kesinleşmesine kadar olan süreci modelleyen bir eğitim uygulamasıdır. PostgreSQL şeması, rol bazlı portallar ve canlı ER diyagramı aynı akış üzerinde ilişkisel modelleme, veri bütünlüğü ve işlem yönetimini gösterir.
 
+Uygulama Spring Boot 3.5, Spring Security ve JWT, PostgreSQL 16, Flyway ve Angular 21 kullanır.
+
 ![Komite oylamasının ardından adayın kabul edilmesini gösteren karakter sahnesi](docs/faz-3b-gorseller/03-karar-kabul.png)
 
 ## Neler yapılabilir?
@@ -30,46 +32,15 @@ Bu proje, bir Nobel Ödülü adaylığının kuruluş tarafından önerilmesinde
 
 Güncel tablo ve kısıt tanımları [Flyway geçişlerinde](backend/src/main/resources/db/migration) yer alır. [IntelliJ veritabanı görünümü](docs/IntellijDatabase.png) de depoya eklenmiştir.
 
-## Yerelde çalıştırma
+## Docker ile çalıştırma
 
-### Gereksinimler
-
-- Git ve çalışan bir Docker motoru ile Docker Compose
-- Java 21 ve Maven 3.9.x
-- Node.js 24 ve npm
-
-Uygulama Spring Boot 3.5, Spring Security ve JWT, Spring Data JPA, PostgreSQL 16, Flyway ve Angular 21 kullanır.
-
-### 1. Depoyu klonlayın ve PostgreSQL’i başlatın
+Docker Desktop veya Docker Engine ve Docker Compose çalışırken proje kökünde `docker compose up -d` komutunu çalıştırın. Compose, PostgreSQL’i başlatır, API ve Angular imajlarını ilk çalıştırmada derler ve uygulamayı tek adreste açar. Yerel kurulum için Java, Maven veya Node.js yüklemeniz gerekmez.
 
 ```bash
 git clone https://github.com/BatuhanOzdemir7/nobel-odulu-degerlendirme-sistemi.git
 cd nobel-odulu-degerlendirme-sistemi
-docker compose up -d postgres
+docker compose up -d
 docker compose ps
-```
-
-`postgres` hizmeti `healthy` olunca devam edin. Varsayılan veritabanı `nobel_db`, kullanıcı `nobel_user`, geliştirme şifresi `nobel_password` ve PostgreSQL portu `5432`’dir. Kayıtlar Docker’ın `postgres_data` veri biriminde saklanır. Servisi durdurmak için proje kökünde `docker compose stop` kullanabilirsiniz.
-
-### 2. API’yi başlatın
-
-Proje kökünden ayrı bir terminalde aşağıdaki komutları çalıştırın.
-
-```bash
-cd backend
-mvn spring-boot:run "-Dspring-boot.run.arguments=--server.address=127.0.0.1 --nobel.security.local-demo-login=true"
-```
-
-API `http://localhost:8080` üzerinden çalışır. İlk başlatmada Flyway tabloları oluşturur ve örnek verileri yükler. Bu komut tek tıkla demo girişini yerel kullanım için açar. Demo girişi varsayılan olarak kapalıdır. Şifreli giriş için API’yi `mvn spring-boot:run` ile de başlatabilirsiniz.
-
-### 3. Angular arayüzünü başlatın
-
-Proje kökünden yeni bir terminal açın.
-
-```bash
-cd frontend
-npm ci
-npm start
 ```
 
 | Sayfa | Adres |
@@ -78,25 +49,41 @@ npm start
 | Canlı ER diyagramı ve karakter sahnesi | [localhost:4200/live-stage](http://localhost:4200/live-stage) |
 | Dinamik senaryolar | [localhost:4200/dinamik-senaryolar](http://localhost:4200/dinamik-senaryolar) |
 
-Demo panelinde veritabanından gelen bir isme tıklayınca o profile ait portal açılır. Yerel demo için arayüzü `http://localhost:4200` üzerinden açın.
+Demo panelinde veritabanından gelen bir isme tıklayınca o profile ait portal açılır. Yerel demo girişi için adresi `localhost` ile açın. Angular ve `/api` istekleri aynı adresten sunulur. Flyway ilk açılışta örnek tabloları ve kayıtları hazırlar.
 
-### PostgreSQL farklı bir portta çalışıyorsa
-
-`5432` kullanımdaysa [docker-compose.yml](docker-compose.yml) içindeki `postgres.ports` eşlemesini `"127.0.0.1:55443:5432"` olarak düzenleyip PostgreSQL’i başlatın. Makinenizde proje zaten `nobel-local-postgres` konteyneriyle `55443` üzerinde kurulmuşsa mevcut kayıtlarla devam etmek için `docker start nobel-local-postgres` çalıştırın.
-
-API’yi başlatacağınız terminalde bağlantı adresini ayarlayın. Diğer bağlantı bilgileri için gerektiğinde `DB_USERNAME` ve `DB_PASSWORD` ortam değişkenleri kullanılabilir.
+- Servisleri durdurmak için `docker compose stop` kullanın. PostgreSQL verileri projenin `postgres_data` veri biriminde saklanır.
+- Kod değişikliğinden sonra imajları güncellemek için `docker compose up -d --build` çalıştırın. Başlangıç kayıtlarını `docker compose logs -f backend` ile takip edebilirsiniz.
+- `4200` doluysa `NOBEL_APP_PORT` değişkenini boş bir porta ayarlayın. Örneğin PowerShell’de aşağıdaki komutlarla [localhost:14200](http://localhost:14200) üzerinden açabilirsiniz.
 
 ```powershell
-# Windows PowerShell
-$env:DB_URL = 'jdbc:postgresql://127.0.0.1:55443/nobel_db'
+$env:NOBEL_APP_PORT = '14200'
+docker compose up -d
 ```
+
+### IntelliJ ile PostgreSQL’e bağlanma
+
+`docker compose port postgres 5432` komutu PostgreSQL’in yerelde hangi porta açıldığını gösterir. Sabit bir port gerekiyorsa `docker compose up -d` öncesinde `NOBEL_DB_PORT` değişkenini ayarlayabilirsiniz.
+
+IntelliJ IDEA’nın **Database** panelinde host olarak `127.0.0.1`, veritabanı olarak `nobel_db`, kullanıcı olarak `nobel_user` ve geliştirme şifresi olarak `nobel_password` girin. **Test Connection** başarılı olunca `public` şemasına sağ tıklayıp **Diagrams → Show Diagram** seçin.
+
+### Java ve Angular’ı yerelde geliştirme
+
+Bu yöntem Java 21, Maven 3.9.x, Node.js 24 ve npm ile çalışır. Proje kökünde `docker compose up -d postgres` çalıştırın. `docker compose port postgres 5432` çıktısındaki portu kullanarak API terminalinde `DB_URL` değişkenini ayarlayın. Örneğin port `55443` ise PowerShell’de `$env:DB_URL = 'jdbc:postgresql://127.0.0.1:55443/nobel_db'` çalıştırın.
 
 ```bash
-# Bash veya Zsh
-export DB_URL='jdbc:postgresql://127.0.0.1:55443/nobel_db'
+cd backend
+mvn spring-boot:run "-Dspring-boot.run.arguments=--server.address=127.0.0.1 --nobel.security.local-demo-login=true"
 ```
 
-Ardından aynı terminalde 2. adımdaki API komutunu çalıştırın.
+Proje kökünden ayrı bir terminal açın.
+
+```bash
+cd frontend
+npm ci
+npm start
+```
+
+Bu kurulumda arayüz `http://localhost:4200`, API `http://localhost:8080` adresinden çalışır.
 
 ## Dersi sunarken
 
@@ -104,8 +91,6 @@ Ardından aynı terminalde 2. adımdaki API komutunu çalıştırın.
 2. Başka bir sekmede bir kuruluş hesabıyla giriş yapıp Fizik ödülü için yeni bir aday gösterin. Canlı sahnede adaylık olayını ve ER vurgusunu izleyin.
 3. Fizik komitesinin üç üyesiyle sırayla giriş yapıp bir ölçüt seçerek oy verin. Her oy ER diyagramını tetikler. Üç üyeli komitede üçüncü oyla birlikte nihai karar oluşur.
 4. Aynı adayla giriş yapıp adaylığı ve değerlendirme sonucunu kontrol edin. Akışı örnek verilerle göstermek için **Dinamik Senaryolar** sekmesinden bir senaryo seçebilirsiniz.
-
-PostgreSQL tablolarını doğrudan incelemek için IntelliJ IDEA’nın **Database** panelinde bir PostgreSQL bağlantısı oluşturun. Host `127.0.0.1`, veritabanı `nobel_db` ve port Docker’da yayımlanan port olmalıdır. **Test Connection** başarılı olunca `public` şemasına sağ tıklayıp **Diagrams → Show Diagram** seçin.
 
 ## Testler
 
