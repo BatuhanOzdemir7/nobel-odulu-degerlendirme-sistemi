@@ -11,7 +11,7 @@ class KullaniciSchemaIT extends AuthPostgresIntegration {
     void cleanDatabaseAppliesMigrationsInVersionOrderAndValidatesHibernateMappings() {
         assertThat(jdbc.queryForList("""
                 SELECT version FROM flyway_schema_history WHERE success ORDER BY installed_rank
-                """, String.class)).containsExactly("1", "2", "3", "4", "5", "6");
+                """, String.class)).containsExactly("1", "2", "3", "4", "5", "6", "7");
         assertThat(jdbc.queryForObject("""
                 SELECT deger FROM sistem_ayari WHERE anahtar = 'GIZLILIK_MODU'
                 """, String.class)).isEqualTo("SEFFAF");

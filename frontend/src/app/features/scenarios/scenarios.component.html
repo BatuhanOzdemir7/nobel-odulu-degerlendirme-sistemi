@@ -10,7 +10,7 @@
   <h1>Dinamik Senaryolar</h1>
   <section class="picker" aria-labelledby="scenario-heading">
     <h2 id="scenario-heading">Bir senaryo seç</h2>
-    <p class="intro">Örnek adaylıklar ve her oynatmada yeniden üretilen komite oyları.</p>
+    <p class="intro">Örnek adaylıklar ve her oynatmada yeniden üretilen komite oyları. Bu gösterim tarayıcıda çalışır.</p>
     <div class="scenario-options">
       @for (scenario of scenarios; track scenario.id) {
         <button class="scenario-option" type="button" [attr.aria-pressed]="selected()?.id === scenario.id"
@@ -71,7 +71,7 @@
           </li>
         }
       </ol>
-      <code class="sql" aria-label="Etkin işlemin SQL karşılığı">{{ step.sql }}</code>
+      <code class="sql" aria-label="Etkin işlem için SQL örneği">{{ step.sql }}</code>
     </section>
   }
 </main>

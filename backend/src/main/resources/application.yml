@@ -3,7 +3,7 @@ spring:
     name: nobel-degerlendirme
   datasource:
     url: ${DB_URL:jdbc:postgresql://localhost:5432/nobel_db}
-    username: ${DB_USERNAME:nobel_user}
+    username: ${DB_USERNAME:nobel_username}
     password: ${DB_PASSWORD:nobel_password}
   jpa:
     hibernate:

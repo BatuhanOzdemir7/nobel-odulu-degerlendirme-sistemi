@@ -61,15 +61,16 @@ class UzmanOyuSchemaIT extends AuthPostgresIntegration {
         Flyway.configure().dataSource(dataSource).schemas(schema).outOfOrder(true).load().migrate();
 
         assertThat(jdbc.queryForList("""
-                SELECT sonuc FROM phase_2a_upgrade.degerlendirme WHERE kesinlesmis
+                SELECT sonuc FROM phase_2a_upgrade.degerlendirme
+                WHERE kesinlesmis AND tarih = DATE '2025-03-02'
                 """, String.class)).containsExactly("KABUL");
 
         assertThat(jdbc.queryForList("""
                 SELECT version FROM phase_2a_upgrade.flyway_schema_history
                 WHERE success AND version IS NOT NULL ORDER BY installed_rank
-                """, String.class)).containsExactly("1", "2", "3", "5", "4", "6");
+                """, String.class)).containsExactly("1", "2", "3", "5", "4", "6", "7");
         assertThat(jdbc.queryForList("SELECT version FROM flyway_schema_history WHERE success ORDER BY installed_rank",
-                String.class)).containsExactly("1", "2", "3", "4", "5", "6");
+                String.class)).containsExactly("1", "2", "3", "4", "5", "6", "7");
 
         var upgraded = entityManagers.dataSource(dataSource).packages("tr.edu.nobel.entity")
                 .persistenceUnit("phase2b-upgrade-validation")

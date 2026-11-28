@@ -23,15 +23,15 @@ export type ScenarioStep = {
 
 export const SCENARIOS: readonly Scenario[] = [
   {
-    id: 1, organization: 'CERN', candidate: 'Dr. Selin Arslan', category: 'Fizik', award: 'Nobel Fizik Ödülü',
-    experts: ['Prof. İlker Kaya', 'Prof. Elif Demir', 'Dr. Deniz Akın'],
+    id: 1, organization: 'CERN', candidate: 'Selin Arslan', category: 'Fizik', award: 'Nobel Fizik Ödülü',
+    experts: ['Prof. Leyla Aksoy', 'Prof. Murat Erdem', 'Dr. Elif Arslan'],
   },
   {
-    id: 2, organization: 'Kuzey Sağlık Enstitüsü', candidate: 'Dr. Ece Aydın', category: 'Tıp',
-    award: 'Nobel Fizyoloji veya Tıp Ödülü', experts: ['Prof. Zeynep Tunç', 'Dr. Mert Uslu', 'Prof. Leyla Duru'],
+    id: 2, organization: 'Kuzey Sağlık Enstitüsü', candidate: 'Ece Aydın', category: 'Tıp',
+    award: 'Nobel Fizyoloji veya Tıp Ödülü', experts: ['Prof. Jonas Berg', 'Dr. Sara Lind', 'Prof. Erik Holm'],
   },
   {
-    id: 3, organization: 'Uluslararası Kimya Akademisi', candidate: 'Dr. Arda Yalçın', category: 'Kimya',
+    id: 3, organization: 'Uluslararası Kimya Akademisi', candidate: 'Arda Yalçın', category: 'Kimya',
     award: 'Nobel Kimya Ödülü', experts: ['Prof. Nil Aksoy', 'Dr. Can Erdem', 'Prof. Ada Sönmez'],
   },
 ];
@@ -56,7 +56,7 @@ export function createScenarioSteps(scenario: Scenario, run: number, random = Ma
       id: `scenario-${run}-nomination`,
       title: 'Aday gösterme',
       detail: `${organization}, ${candidate} adlı araştırmacıyı ${award} için aday gösterdi.`,
-      sql: `INSERT INTO aday_gosterme (kurulus_no, aday_id, odul_no, tarih, saat) VALUES (${id}, ${id}, ${id}, CURRENT_DATE, LOCALTIME)`,
+      sql: 'INSERT INTO aday_gosterme (kurulus_no, aday_id, odul_no, tarih, saat) VALUES (:kurulus_no, :aday_id, :odul_no, CURRENT_DATE, LOCALTIME)',
       highlight: highlightFor(NOMINATION_NODES),
       cue: {
         scene: 'NOMINATION',
@@ -68,7 +68,7 @@ export function createScenarioSteps(scenario: Scenario, run: number, random = Ma
       id: `scenario-${run}-category`,
       title: 'Kategori ve komite eşleştirmesi',
       detail: `${award}, ${category} kategorisine bağlıdır. Bu kategorideki adaylığı ${committee.committeeLabel} inceler.`,
-      sql: `SELECT k.kategori_adi, c.komite_adi FROM odul o JOIN kategori k USING (kategori_id) JOIN degerlendirme_komitesi c USING (kategori_id) WHERE o.odul_no = ${id} AND c.komite_id = ${committee.committeeId}`,
+      sql: `SELECT k.kategori_adi, c.komite_adi FROM odul o JOIN kategori k USING (kategori_id) JOIN degerlendirme_komitesi c USING (kategori_id) WHERE o.aciklayici_ad = '${award}' AND c.komite_adi = '${committee.committeeLabel}'`,
       highlight: highlightFor(CATEGORY_NODES, 'info'),
       categoryPath: [award, category, committee.committeeLabel],
     },
@@ -78,7 +78,7 @@ export function createScenarioSteps(scenario: Scenario, run: number, random = Ma
         id: `scenario-${run}-vote-${expertId}`,
         title: `${index + 1}. uzman oyu`,
         detail: `${label} ${vote === 'KABUL' ? 'kabul' : 'ret'} oyu verdi.`,
-        sql: `INSERT INTO uzman_oyu (komite_id, uzman_id, aday_id, olcut, karar) VALUES (${id}, ${expertId}, ${id}, 'Özgünlük', '${vote}')`,
+        sql: `INSERT INTO uzman_oyu (komite_id, uzman_id, aday_id, olcut, karar) VALUES (:komite_id, :uzman_id, :aday_id, 'Özgünlük', '${vote}')`,
         highlight: highlightFor(VOTE_NODES),
         cue: {
           scene: 'COMMITTEE_VOTE',
@@ -91,7 +91,7 @@ export function createScenarioSteps(scenario: Scenario, run: number, random = Ma
       id: `scenario-${run}-decision`,
       title: awarded ? 'Ödül verildi' : 'Ödül verilmedi',
       detail: `${candidate} için komite kararı ${kabul} kabul ve ${red} ret oyuyla kesinleşti.`,
-      sql: `INSERT INTO degerlendirme (komite_id, aday_id, tarih, sonuc, olcut) VALUES (${id}, ${id}, CURRENT_DATE, '${result}', 'Özgünlük')`,
+      sql: `INSERT INTO degerlendirme (komite_id, aday_id, tarih, sonuc, olcut) VALUES (:komite_id, :aday_id, CURRENT_DATE, '${result}', 'Özgünlük')`,
       highlight: highlightFor(awarded ? [...DECISION_NODES, 'aday_gosterir', 'ODUL'] : DECISION_NODES),
       cue: {
         scene: 'DECISION_FINALIZED',
