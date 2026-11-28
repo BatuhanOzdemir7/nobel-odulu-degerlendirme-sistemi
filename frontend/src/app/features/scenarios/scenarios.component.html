@@ -1,10 +1,10 @@
-<main class="scenario-page">
-  <header class="page-header">
-    <nav aria-label="Sahne menüsü">
+<main class="stage-page">
+  <header class="stage-header">
+    <nav class="stage-nav" aria-label="Sahne menüsü">
       <a routerLink="/live-stage">Canlı Sahne</a>
       <a routerLink="/dinamik-senaryolar" aria-current="page">Dinamik Senaryolar</a>
     </nav>
-    <a class="back-link" [routerLink]="home()">{{ home() === '/login' ? 'Giriş ekranına dön' : 'Panele dön' }}</a>
+    <a class="stage-back" [routerLink]="home()">{{ home() === '/login' ? 'Giriş ekranına dön' : 'Panele dön' }}</a>
   </header>
 
   <h1>Dinamik Senaryolar</h1>
@@ -28,7 +28,7 @@
       <h2>{{ scenario.award }}</h2>
       <div class="controls">
         <p role="status">
-          @if (running()) { Adım {{ index() + 1 }} / {{ steps().length }} }
+          @if (running()) { {{ activeStep()?.title }} · {{ index() + 1 }} / {{ steps().length }} }
           @else { Senaryo tamamlandı }
         </p>
         <button class="replay" type="button" [disabled]="running()" (click)="play(scenario)">Yeniden oynat</button>
@@ -39,17 +39,24 @@
   <div class="stage-grid">
     <section class="surface map-panel" aria-labelledby="scenario-er-heading">
       <h2 id="scenario-er-heading">ER Diyagramı</h2>
-      <div class="map-scroll">
-        @for (step of activeStepList(); track step.command.eventId) {
-          <app-er-live-map [highlight]="step.highlight" />
-        } @empty {
-          <app-er-live-map />
-        }
-      </div>
+      @for (step of activeStepList(); track step.id) {
+        <app-er-live-map [highlight]="step.highlight" />
+      } @empty {
+        <app-er-live-map />
+      }
     </section>
     <section class="surface stage-panel" aria-labelledby="scenario-stage-heading">
       <h2 id="scenario-stage-heading">Karakter Sahnesi</h2>
-      <app-nobel-stage [liveControls]="false" />
+      <div class="scenario-stage">
+        <app-nobel-stage [liveControls]="false" />
+        @if (activeStep()?.categoryPath; as path) {
+          <dl class="category-mapping" aria-label="Ödülün değerlendirme yolu">
+            <div><dt>Ödül</dt><dd>{{ path[0] }}</dd></div>
+            <div><dt>Kategori</dt><dd>{{ path[1] }}</dd></div>
+            <div><dt>Komite</dt><dd>{{ path[2] }}</dd></div>
+          </dl>
+        }
+      </div>
     </section>
   </div>
 
@@ -57,7 +64,7 @@
     <section class="surface activity" aria-labelledby="scenario-activity-heading">
       <h2 id="scenario-activity-heading">İşlem akışı</h2>
       <ol class="steps">
-        @for (item of steps(); track item.command.eventId; let position = $index) {
+        @for (item of steps(); track item.id; let position = $index) {
           <li [attr.aria-current]="position === index() ? 'step' : null" [class.waiting]="position > index()">
             <strong>{{ position > index() && $last ? 'Komite kararı' : item.title }}</strong>
             @if (position <= index()) { <span>{{ item.detail }}</span> }

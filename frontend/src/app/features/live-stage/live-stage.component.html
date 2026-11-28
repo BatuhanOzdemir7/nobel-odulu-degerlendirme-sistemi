@@ -1,20 +1,18 @@
-<main class="live-stage">
+<main class="stage-page">
   <header class="stage-header">
-    <h1>Nobel Canlı Sahne</h1>
+    <nav class="stage-nav" aria-label="Sahne menüsü">
+      <a routerLink="/live-stage" aria-current="page">Canlı Sahne</a>
+      <a routerLink="/dinamik-senaryolar">Dinamik Senaryolar</a>
+    </nav>
     <span class="connection" role="status" [attr.data-status]="stream.status()">
       {{ statusLabel(stream.status()) }}
     </span>
   </header>
-  <nav class="stage-nav" aria-label="Sahne menüsü">
-    <a routerLink="/live-stage" aria-current="page">Canlı Sahne</a>
-    <a routerLink="/dinamik-senaryolar">Dinamik Senaryolar</a>
-  </nav>
+  <h1>Nobel Canlı Sahne</h1>
   <div class="stage-grid">
     <section class="surface map-panel" aria-labelledby="er-heading">
       <h2 id="er-heading">ER Diyagramı</h2>
-      <div class="map-scroll">
-        <app-er-live-map [highlight]="current()?.erHighlight ?? null" />
-      </div>
+      <app-er-live-map [highlight]="current()?.erHighlight ?? null" />
     </section>
     <section class="surface character-panel" aria-labelledby="character-heading">
       <h2 id="character-heading">Karakter Sahnesi</h2>

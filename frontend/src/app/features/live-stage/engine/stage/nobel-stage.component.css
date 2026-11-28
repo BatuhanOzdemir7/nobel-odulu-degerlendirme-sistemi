@@ -7,7 +7,10 @@
 }
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
 .stage {
-  position: relative; height: clamp(220px, 58cqw, 320px); container-type: size;
+  position: relative;
+  height: var(--nobel-stage-height, clamp(220px, 58cqw, 320px));
+  aspect-ratio: var(--nobel-stage-aspect-ratio, auto);
+  container-type: size;
   overflow: hidden; background: #0c1f1a; border-radius: 12px; isolation: isolate;
 }
 .stage__waiting { position: absolute; top: 38%; inset-inline: 0; margin: 0; text-align: center; color: #abc7bd; }

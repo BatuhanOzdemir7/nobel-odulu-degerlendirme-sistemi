@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, effect, inject, signal, untracked, viewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, DestroyRef, effect, inject, signal, untracked, viewChild } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
 import { NobelStageComponent } from '../live-stage/engine/stage/nobel-stage.component';
@@ -10,11 +10,13 @@ import { createScenarioSteps, SCENARIOS, type ScenarioStep } from './scenario-st
   imports: [RouterLink, NobelStageComponent, ErLiveMapComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './scenarios.component.html',
-  styleUrl: './scenarios.component.css',
+  styleUrls: ['../live-stage/stage-view.css', './scenarios.component.css'],
 })
 export class ScenariosComponent {
   private readonly auth = inject(AuthService);
   private readonly stage = viewChild(NobelStageComponent);
+  private readonly holdingCategory = signal(false);
+  private categoryTimer?: ReturnType<typeof setTimeout>;
   private runId = 0;
 
   protected readonly scenarios = SCENARIOS;
@@ -22,7 +24,7 @@ export class ScenariosComponent {
   protected readonly steps = signal<readonly ScenarioStep[]>([]);
   protected readonly index = signal(-1);
   protected readonly running = signal(false);
-  protected readonly activeStep = computed(() => this.steps()[this.index()]);
+  protected readonly activeStep = computed<ScenarioStep | undefined>(() => this.steps()[this.index()]);
   protected readonly activeStepList = computed(() => {
     const step = this.activeStep();
     return step ? [step] : [];
@@ -33,9 +35,10 @@ export class ScenariosComponent {
   });
 
   constructor() {
+    inject(DestroyRef).onDestroy(() => clearTimeout(this.categoryTimer));
     effect(() => {
       const stage = this.stage();
-      if (!stage || !this.running() || stage.director.playing()) return;
+      if (!stage || !this.running() || this.holdingCategory() || stage.director.playing()) return;
       untracked(() => this.advance(stage));
     });
   }
@@ -56,6 +59,11 @@ export class ScenariosComponent {
       return;
     }
     this.index.set(index);
-    stage.play(step.command);
+    if (step.cue) {
+      stage.play({ ...step.cue, eventId: step.id, severity: step.highlight.severity });
+      return;
+    }
+    this.holdingCategory.set(true);
+    this.categoryTimer = setTimeout(() => this.holdingCategory.set(false), 2800);
   }
 }

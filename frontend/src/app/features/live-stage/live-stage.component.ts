@@ -13,7 +13,7 @@ import { CharacterStageComponent } from './stage/character-stage.component';
   imports: [RouterLink, ErLiveMapComponent, CharacterStageComponent, SqlRibbonComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './live-stage.component.html',
-  styleUrl: './live-stage.component.css',
+  styleUrls: ['./stage-view.css', './live-stage.component.css'],
 })
 export class LiveStageComponent {
   protected readonly stream = inject(ActivityStreamService);

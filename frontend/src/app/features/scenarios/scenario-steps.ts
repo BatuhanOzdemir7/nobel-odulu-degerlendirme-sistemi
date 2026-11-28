@@ -1,6 +1,5 @@
-import type { ErHighlight, StageVote } from '../../core/events/activity-event.model';
+import type { ErHighlight, StageCue, StageVote } from '../../core/events/activity-event.model';
 import { ER_EDGES } from '../live-stage/er/er-topology';
-import type { StageCharacterCommand } from '../live-stage/stage/stage.contract';
 
 interface Scenario {
   readonly id: number;
@@ -11,13 +10,16 @@ interface Scenario {
   readonly experts: readonly [string, string, string];
 }
 
-export interface ScenarioStep {
+export type ScenarioStep = {
+  readonly id: string;
   readonly title: string;
   readonly detail: string;
   readonly sql: string;
   readonly highlight: ErHighlight;
-  readonly command: StageCharacterCommand;
-}
+} & (
+  { readonly cue: StageCue; readonly categoryPath?: never }
+  | { readonly categoryPath: readonly [string, string, string]; readonly cue?: never }
+);
 
 export const SCENARIOS: readonly Scenario[] = [
   {
@@ -35,6 +37,7 @@ export const SCENARIOS: readonly Scenario[] = [
 ];
 
 const NOMINATION_NODES = ['KURULUS', 'aday_gosterir', 'ADAY', 'ODUL'];
+const CATEGORY_NODES = ['ODUL', 'kategorisine_aittir', 'KATEGORI', 'olusturulur', 'DEGERLENDIRME_KOMITESI'];
 const DECISION_NODES = ['DEGERLENDIRME_KOMITESI', 'degerlendirir', 'ADAY'];
 const VOTE_NODES = ['UZMAN', 'uyesidir', ...DECISION_NODES];
 
@@ -50,44 +53,55 @@ export function createScenarioSteps(scenario: Scenario, run: number, random = Ma
 
   return [
     {
+      id: `scenario-${run}-nomination`,
       title: 'Aday gösterme',
       detail: `${organization}, ${candidate} adlı araştırmacıyı ${award} için aday gösterdi.`,
       sql: `INSERT INTO aday_gosterme (kurulus_no, aday_id, odul_no, tarih, saat) VALUES (${id}, ${id}, ${id}, CURRENT_DATE, LOCALTIME)`,
       highlight: highlightFor(NOMINATION_NODES),
-      command: {
-        eventId: `scenario-${run}-nomination`, scene: 'NOMINATION', severity: 'success',
+      cue: {
+        scene: 'NOMINATION',
         organizationLabel: organization, candidateName: candidate, awardLabel: award, categoryLabel: category,
         newAccount: true,
       },
     },
+    {
+      id: `scenario-${run}-category`,
+      title: 'Kategori ve komite eşleştirmesi',
+      detail: `${award}, ${category} kategorisine bağlıdır. Bu kategorideki adaylığı ${committee.committeeLabel} inceler.`,
+      sql: `SELECT k.kategori_adi, c.komite_adi FROM odul o JOIN kategori k USING (kategori_id) JOIN degerlendirme_komitesi c USING (kategori_id) WHERE o.odul_no = ${id} AND c.komite_id = ${committee.committeeId}`,
+      highlight: highlightFor(CATEGORY_NODES, 'info'),
+      categoryPath: [award, category, committee.committeeLabel],
+    },
     ...members.map<ScenarioStep>(({ expertId, label }, index) => {
       const { vote } = votes[index];
       return {
+        id: `scenario-${run}-vote-${expertId}`,
         title: `${index + 1}. uzman oyu`,
         detail: `${label} ${vote === 'KABUL' ? 'kabul' : 'ret'} oyu verdi.`,
         sql: `INSERT INTO uzman_oyu (komite_id, uzman_id, aday_id, olcut, karar) VALUES (${id}, ${expertId}, ${id}, 'Özgünlük', '${vote}')`,
         highlight: highlightFor(VOTE_NODES),
-        command: {
-          eventId: `scenario-${run}-vote-${expertId}`, scene: 'COMMITTEE_VOTE', severity: 'success',
+        cue: {
+          scene: 'COMMITTEE_VOTE',
           ...committee, candidateName: candidate, expertId, expertLabel: label, vote,
           votesCast: index + 1, votesRequired: members.length, votes: votes.slice(0, index + 1),
         },
       };
     }),
     {
+      id: `scenario-${run}-decision`,
       title: awarded ? 'Ödül verildi' : 'Ödül verilmedi',
       detail: `${candidate} için komite kararı ${kabul} kabul ve ${red} ret oyuyla kesinleşti.`,
       sql: `INSERT INTO degerlendirme (komite_id, aday_id, tarih, sonuc, olcut) VALUES (${id}, ${id}, CURRENT_DATE, '${result}', 'Özgünlük')`,
       highlight: highlightFor(awarded ? [...DECISION_NODES, 'aday_gosterir', 'ODUL'] : DECISION_NODES),
-      command: {
-        eventId: `scenario-${run}-decision`, scene: 'DECISION_FINALIZED', severity: 'success',
+      cue: {
+        scene: 'DECISION_FINALIZED',
         ...committee, candidateName: candidate, result, tally: { kabul, red, incelemede: 0 },
       },
     },
   ];
 }
 
-function highlightFor(nodes: readonly string[]): ErHighlight {
+function highlightFor(nodes: readonly string[], severity: ErHighlight['severity'] = 'success'): ErHighlight {
   const edges = ER_EDGES.filter(edge => nodes.includes(edge.from) && nodes.includes(edge.to)).map(edge => edge.id);
-  return { nodes, edges, severity: 'success' };
+  return { nodes, edges, severity };
 }
